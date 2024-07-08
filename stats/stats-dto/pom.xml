@@ -35,5 +35,4 @@
             <artifactId>validation-api</artifactId>
         </dependency>
     </dependencies>
-
 </project>
