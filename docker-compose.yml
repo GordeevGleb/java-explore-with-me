@@ -1,49 +1,50 @@
 version: '3.1'
 services:
-  stats-server:
-    build: ./stats/stats-server
-    container_name: stats-server
-    image: stats-server
-    ports:
-      - "9090:9090"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats
-      - SPRING_DATASOURCE_USERNAME=stats
-      - SPRING_DATASOURCE_PASSWORD=123456
-    depends_on:
-      stats-db:
-        condition: service_healthy
 
   stats-db:
     image: postgres:14-alpine
-    volumes:
-      - ./db/stats:/var/lib/postgresql/data
     container_name: stats-db
     ports:
-      - "6541:5432"
+      - "6540:5432"
     environment:
-      - POSTGRES_PASSWORD=123456
-      - POSTGRES_USER=stats
-      - POSTGRES_DB=stats
-    healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
-      interval: 5s
-      retries: 5
-
-  ewm-service:
-    build: ./main-service
-    container_name: main-service
-    image: main-service
-    ports:
-      - "8080:8080"
+      - POSTGRES_DB=stat
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
 
   ewm-db:
     image: postgres:14-alpine
     container_name: ewm-db
     ports:
-      - "6542:5432"
+      - "6541:5432"
     environment:
-      - POSTGRES_PASSWORD=123456
-      - POSTGRES_USER=ewm
-      - POSTGRES_DB=ewm
+      - POSTGRES_DB=ewm-service
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  stats-server:
+    build: stats/stats-server
+    container_name: stats-server
+    ports:
+      - "9090:9090"
+      - "9091:9091"
+    depends_on:
+      - stats-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stat
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+
+  ewm-service:
+    build: main-service
+    container_name: ewm-service
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - ewm-db
+      - stats-server
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - STATS_SERVER_URL=http://stats-server:9090
