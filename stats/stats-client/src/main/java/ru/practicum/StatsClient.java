@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class StatsClient extends BaseClient{
+public class StatsClient extends BaseClient {
 
 
 @Autowired
