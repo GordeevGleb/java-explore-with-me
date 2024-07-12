@@ -1,14 +1,11 @@
 package ru.practicum;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
@@ -17,16 +14,10 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class EndpointHitRequestDto {
+public class EndpointHitResponseDto {
     private Long id;
-    @NotBlank
     private String app;
-    @NotBlank
     private String uri;
-    @NotBlank
     private String ip;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @NotNull
     private LocalDateTime timestamp;
-
 }

@@ -1,15 +1,21 @@
 package ru.practicum.service;
 
-import ru.practicum.EndpointHitDto;
 import ru.practicum.EndpointHitRequestDto;
-import ru.practicum.ViewStatsDto;
+import ru.practicum.EndpointHitResponseDto;
+import ru.practicum.ViewStatsResponseDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import ru.practicum.entity.EndpointHit;
+import ru.practicum.entity.ViewStats;
+
+import java.util.List;
+
 public interface StatsService {
 
-    EndpointHitDto post(EndpointHitRequestDto endpointHitRequestDto);
+    EndpointHitResponseDto postHit(EndpointHitRequestDto endpointHitRequestDto);
 
-    List<ViewStatsDto> get(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique);
+    List<ViewStatsResponseDto> getStats(String start, String end, List<String> uris, Boolean unique);
+
 }
