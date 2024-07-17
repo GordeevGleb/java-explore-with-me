@@ -1,6 +1,5 @@
 package ru.practicum.service.event;
 
-import ru.practicum.dto.compilation.UpdateCompilationRequest;
 import ru.practicum.dto.event.*;
 import ru.practicum.entity.Event;
 import ru.practicum.enums.EventState;
