@@ -9,7 +9,6 @@ import ru.practicum.entity.User;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-@Component
 public interface UserMapper {
 
     User toUser(NewUserRequest newUserRequest);

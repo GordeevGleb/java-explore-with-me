@@ -10,7 +10,6 @@ import ru.practicum.entity.Event;
 
 import java.util.List;
 
-@Component
 @Mapper(componentModel = "spring")
 public interface EventMapper {
     EventFullDto toEventFullDto(Event event);

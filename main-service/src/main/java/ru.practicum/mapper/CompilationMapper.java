@@ -11,7 +11,6 @@ import ru.practicum.entity.Event;
 import java.util.HashSet;
 import java.util.List;
 
-@Component
 @Mapper(componentModel = "spring")
 public interface CompilationMapper {
     CompilationDto toCompilationDto(Compilation compilation);

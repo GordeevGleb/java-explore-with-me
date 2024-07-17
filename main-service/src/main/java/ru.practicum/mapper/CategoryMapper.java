@@ -9,7 +9,6 @@ import ru.practicum.entity.Category;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-@Component
 public interface CategoryMapper {
     Category toCategory(NewCategoryDto newCategoryDto);
 

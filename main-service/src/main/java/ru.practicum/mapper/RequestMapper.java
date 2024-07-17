@@ -7,7 +7,6 @@ import ru.practicum.entity.Request;
 
 import java.util.List;
 
-@Component
 @Mapper(componentModel = "spring")
 public interface RequestMapper {
 
