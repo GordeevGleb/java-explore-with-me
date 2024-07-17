@@ -54,7 +54,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto getById(Long id) {
         log.info("MAIN SERVICE LOG: get category by id " + id);
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() ->new NotFoundException("Category with id=" + id + " was not found"));
+                .orElseThrow(() -> new NotFoundException("Category with id=" + id + " was not found"));
         log.info("MAIN SERVICE LOG: category id " + id + " found");
         return categoryMapper.toCategoryDto(category);
     }
