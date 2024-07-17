@@ -1,7 +1,6 @@
 package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
-import org.springframework.stereotype.Component;
 import ru.practicum.dto.user.NewUserRequest;
 import ru.practicum.dto.user.UserDto;
 import ru.practicum.entity.User;

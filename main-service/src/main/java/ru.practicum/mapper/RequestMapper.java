@@ -1,7 +1,6 @@
 package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
-import org.springframework.stereotype.Component;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.entity.Request;
 
