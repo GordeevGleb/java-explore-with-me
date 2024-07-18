@@ -79,7 +79,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateByAdmin(Long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
-        if (updateEventAdminRequest == null) {
+        if (Optional.of(updateEventAdminRequest).isEmpty()) {
             return eventMapper.toEventFullDto(event);
         }
         if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
@@ -118,24 +118,25 @@ public class EventServiceImpl implements EventService {
         if (updateEventAdminRequest.getTitle() != null) {
             event.setTitle(updateEventAdminRequest.getTitle());
         }
+
         if (updateEventAdminRequest.getStateAction() != null) {
-            if (updateEventAdminRequest.getStateAction().equals(AdminStateAction.PUBLISH_EVENT)) {
-                if (event.getPublishedOn() != null) {
-                    throw new EventStatusException("Cannot publish the event because" +
-                            " it's not in the right state: PUBLISHED");
-                }
-                if (event.getState().equals(EventState.CANCELED)) {
-                    throw new EventStatusException("Event already canceled");
+            AdminStateAction aState = updateEventAdminRequest.getStateAction();
+            if (aState.equals(AdminStateAction.PUBLISH_EVENT)) {
+                if (event.getPublishedOn() != null || event.getState().equals(EventState.CANCELED)) {
+                    throw new EventStatusException("Cannot publish the event because it's not in " +
+                            "the right state: " + event.getState());
                 }
                 event.setState(EventState.PUBLISHED);
                 event.setPublishedOn(LocalDateTime.now());
-            } else if (updateEventAdminRequest.getStateAction().equals(AdminStateAction.REJECT_EVENT)) {
+            } else if (aState.equals(AdminStateAction.REJECT_EVENT)) {
                 if (event.getPublishedOn() != null) {
-                    throw new EventStatusException("Event already published");
+                    throw new EventStatusException("Cannot publish the event because it's not in " +
+                            "the right state: " + event.getState());
                 }
                 event.setState(EventState.CANCELED);
             }
         }
+
         if (updateEventAdminRequest.getEventDate() != null) {
             LocalDateTime eventDateTime = updateEventAdminRequest.getEventDate();
             if (eventDateTime.isBefore(LocalDateTime.now())
