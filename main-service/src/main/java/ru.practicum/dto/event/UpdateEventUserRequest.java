@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import ru.practicum.entity.Location;
 import ru.practicum.enums.UserStateAction;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
@@ -23,6 +25,7 @@ public class UpdateEventUserRequest {
     private LocalDateTime eventDate;
     private Location location;
     private Boolean paid;
+    @PositiveOrZero
     private Long participantLimit;
     private Boolean requestModeration;
     private UserStateAction stateAction;

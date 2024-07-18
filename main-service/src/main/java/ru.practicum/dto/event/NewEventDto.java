@@ -6,7 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.entity.Location;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
@@ -14,12 +16,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NewEventDto {
-    @NotNull
+    @NotBlank
     @Size(min = 20, max = 2000)
     private String annotation;
     @NotNull
     private Long category;
-    @NotNull
+    @NotBlank
     @Size(min = 20, max = 7000)
     private String description;
     @NotNull
@@ -28,6 +30,7 @@ public class NewEventDto {
     @NotNull
     private Location location;
     private Boolean paid;
+    @PositiveOrZero
     private Integer participantLimit;
     private Boolean requestModeration;
     @NotNull

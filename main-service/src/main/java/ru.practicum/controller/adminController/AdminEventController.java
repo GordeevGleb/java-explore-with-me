@@ -9,6 +9,7 @@ import ru.practicum.enums.EventState;
 import ru.practicum.service.event.EventService;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -26,13 +27,13 @@ public class AdminEventController {
     }
 
     @GetMapping
-    public List<EventFullDto> get(@RequestParam(name = "users", required = false) List<Long> users,
-                                        @RequestParam(name = "states", required = false) EventState states,
-                                        @RequestParam(name = "categories", required = false) List<Long> categoriesId,
-                                        @RequestParam(name = "rangeStart", required = false) String rangeStart,
-                                        @RequestParam(name = "rangeEnd", required = false) String rangeEnd,
-                                        @RequestParam(name = "from", required = false, defaultValue = "0") Integer from,
-                                        @RequestParam(name = "size", required = false, defaultValue = "10") Integer size) {
-        return eventService.getWithParamsAdmin(users, states, categoriesId, rangeStart, rangeEnd, from, size);
+    public List<EventFullDto> get(@RequestParam(required = false) List<Long> users,
+                                        @RequestParam(required = false) EventState states,
+                                        @RequestParam(required = false) List<Long> categories,
+                                        @RequestParam(required = false) LocalDateTime rangeStart,
+                                        @RequestParam(required = false) LocalDateTime rangeEnd,
+                                        @RequestParam(required = false, defaultValue = "0") Integer from,
+                                        @RequestParam(required = false, defaultValue = "10") Integer size) {
+        return eventService.getWithParamsAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 }

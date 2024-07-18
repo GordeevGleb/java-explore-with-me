@@ -22,7 +22,6 @@ public interface EventMapper {
     @Mapping(target = "initiator", source = "initiator")
     @Mapping(target = "requestModeration", source = "newEventDto.requestModeration", defaultValue = "true")
     @Mapping(target = "createdOn", source = "localDateTime")
-    @Mapping(target = "publishedOn", source = "localDateTime")
     @Mapping(target = "state", source = "eventState")
     Event toEvent(NewEventDto newEventDto,
                   Category category,

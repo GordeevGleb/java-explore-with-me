@@ -3,6 +3,7 @@ package ru.practicum.service.event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.dto.event.*;
@@ -204,61 +205,43 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto getById(Long userId, Long eventId) {
+    public EventFullDto getByIdUser(Long userId, Long eventId) {
         log.info("MAIN SERVICE LOG: getting event id " + eventId + " by user id " + userId);
         Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (actual.getPublishedOn() == null) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
         log.info("MAIN SERVICE LOG: event found");
         return eventMapper.toEventFullDto(actual);
     }
 
     @Override
     public List<EventFullDto> getWithParamsAdmin(List<Long> users, EventState states, List<Long> categoriesId,
-                                                     String rangeStart, String rangeEnd, Integer from, Integer size) {
-        LocalDateTime start = rangeStart != null ? LocalDateTime.parse(rangeStart, dateFormatter) : null;
-        LocalDateTime end = rangeEnd != null ? LocalDateTime.parse(rangeEnd, dateFormatter) : null;
-
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Event> query = builder.createQuery(Event.class);
-
-        Root<Event> root = query.from(Event.class);
-        Predicate criteria = builder.conjunction();
-
-        if (categoriesId != null && categoriesId.size() > 0) {
-            Predicate containCategories = root.get("category").in(categoriesId);
-            criteria = builder.and(criteria, containCategories);
-        }
-
-        if (users != null && users.size() > 0) {
-            Predicate containUsers = root.get("initiator").in(users);
-            criteria = builder.and(criteria, containUsers);
-        }
-
-        if (states != null) {
-            Predicate containStates = root.get("state").in(states);
-            criteria = builder.and(criteria, containStates);
-        }
-
-        if (rangeStart != null) {
-            Predicate greaterTime = builder.greaterThanOrEqualTo(root.get("eventDate").as(LocalDateTime.class), start);
-            criteria = builder.and(criteria, greaterTime);
-        }
-        if (rangeEnd != null) {
-            Predicate lessTime = builder.lessThanOrEqualTo(root.get("eventDate").as(LocalDateTime.class), end);
-            criteria = builder.and(criteria, lessTime);
-        }
-
-        query.select(root).where(criteria);
-        List<Event> events = entityManager.createQuery(query)
-                .setFirstResult(from)
-                .setMaxResults(size)
-                .getResultList();
-
-        if (events.size() == 0) {
-            return new ArrayList<>();
-        }
-
-        setView(events);
+                                                     LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                 Integer from, Integer size) {
+        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+        Specification<Event> specification = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (users != null && users.size() > 0) {
+                predicates.add(builder.and(root.get("initiator").in(users)));
+            }
+            if (states != null) {
+                predicates.add(builder.and(root.get("state").in(states)));
+            }
+            if (categoriesId != null && categoriesId.size() > 0) {
+                predicates.add(builder.and(root.get("category").in(categoriesId)));
+            }
+            if (rangeStart != null) {
+                predicates.add(builder.greaterThanOrEqualTo(root.get("eventDate").as(LocalDateTime.class), rangeStart));
+            }
+            if (rangeEnd != null) {
+                predicates.add(builder.lessThanOrEqualTo(root.get("eventDate").as(LocalDateTime.class), rangeEnd));
+            }
+            return builder.and(predicates.toArray(new Predicate[predicates.size()]));
+        };
+        List<Event> events = eventRepository.findAll(specification, page).stream()
+                .collect(Collectors.toList());
         return eventMapper.toEventFullDtoList(events);
     }
 
@@ -340,7 +323,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto getById(Long id, HttpServletRequest request) {
+    public EventFullDto getByIdPublic(Long id, HttpServletRequest request) {
         log.info("MAIN SERVICE LOG: get event id " + id);
         Event event = eventRepository.findByIdAndPublishedOnIsNotNull(id)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));

@@ -26,11 +26,11 @@ public class StatsServiceImpl implements StatsService {
         String nameService = "main-service";
 
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                        .timestamp(LocalDateTime.parse(LocalDateTime.now().format(dateFormatter)))
-                                .uri("/events")
-                                        .app(nameService)
-                                                .ip(remoteAddr)
-                                                        .build();
+                .timestamp(LocalDateTime.now())
+                .uri("/events")
+                .app(nameService)
+                .ip(remoteAddr)
+                .build();
         statsClient.postHit(requestDto);
         sendStatForTheEvent(event.getId(), remoteAddr, now, nameService);
     }
@@ -42,7 +42,7 @@ public class StatsServiceImpl implements StatsService {
         String nameService = "main-service";
 
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                .timestamp(LocalDateTime.parse(LocalDateTime.now().format(dateFormatter)))
+                .timestamp(LocalDateTime.now())
                 .uri("/events")
                 .app(nameService)
                 .ip(request.getRemoteAddr())
@@ -55,7 +55,7 @@ public class StatsServiceImpl implements StatsService {
     public void sendStatForTheEvent(Long eventId, String remoteAddr, LocalDateTime now,
                                     String nameService) {
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                .timestamp(LocalDateTime.parse(LocalDateTime.now().format(dateFormatter)))
+                .timestamp(LocalDateTime.now())
                 .uri("/events" + eventId)
                 .app(nameService)
                 .ip(remoteAddr)
@@ -68,7 +68,7 @@ public class StatsServiceImpl implements StatsService {
                                       String nameService) {
         for (Event event : events) {
             EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                    .timestamp(LocalDateTime.parse(LocalDateTime.now().format(dateFormatter)))
+                    .timestamp(LocalDateTime.now())
                     .uri("/events" + event.getId())
                     .app(nameService)
                     .ip(remoteAddr)
