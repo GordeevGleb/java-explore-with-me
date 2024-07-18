@@ -155,6 +155,9 @@ public class EventServiceImpl implements EventService {
         log.info("MAIN SERICE LOG: user id " + userId + " updating event id " + eventId);
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (Optional.of(updateEventUserRequest).isEmpty()) {
+            return eventMapper.toEventFullDto(event);
+        }
         if (event.getState().equals(EventState.PUBLISHED)) {
             throw new EventStatusException("Only pending or canceled events can be changed");
         }
@@ -166,7 +169,7 @@ public class EventServiceImpl implements EventService {
         }
         if (updateEventUserRequest.getCategory() != null) {
             Long categoryId = updateEventUserRequest.getCategory();
-            Category category = categoryRepository.findById(updateEventUserRequest.getCategory())
+            Category category = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
             event.setCategory(category);
         }

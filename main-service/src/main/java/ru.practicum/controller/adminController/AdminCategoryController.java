@@ -16,7 +16,7 @@ import javax.validation.Valid;
 @Validated
 public class AdminCategoryController {
 
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
