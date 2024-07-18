@@ -93,6 +93,10 @@ public class RequestServiceImpl implements RequestService {
         List<Request> requests = requestRepository.findAllByEventWithInitiator(userId, eventId).stream()
                 .filter(request -> eventRequestStatusUpdateRequest.getRequestIds().contains(request.getId()))
                 .collect(Collectors.toList());
+        if (requests.stream().anyMatch(request -> request.getStatus().equals(RequestStatus.CONFIRMED)
+                && eventRequestStatusUpdateRequest.getStatus().equals(RequestStatus.REJECTED))) {
+            throw new RequestStatusException("request already confirmed");
+        }
 
         if (event.getConfirmedRequests() + requests.size() > event.getParticipantLimit() && eventRequestStatusUpdateRequest.getStatus().equals(RequestStatus.CONFIRMED)) {
             throw new IntegrityConflictException("The participant limit has been reached");
