@@ -2,14 +2,12 @@ package ru.practicum.service.event;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.entity.Category;
 import ru.practicum.entity.Event;
-import ru.practicum.entity.Location;
 import ru.practicum.entity.User;
 import ru.practicum.enums.AdminStateAction;
 import ru.practicum.enums.EventState;
