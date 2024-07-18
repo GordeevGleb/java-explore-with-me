@@ -9,6 +9,7 @@ import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.entity.Category;
 import ru.practicum.entity.Event;
+import ru.practicum.entity.Location;
 import ru.practicum.entity.User;
 import ru.practicum.enums.AdminStateAction;
 import ru.practicum.enums.EventState;
@@ -36,23 +37,25 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
+
     private final EventMapper eventMapper;
     private final UserRepository userRepository;
 
     private final EntityManager entityManager;
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final StatsService statsService;
+
 
     @Override
     public EventFullDto create(Long userId, NewEventDto newEventDto) {
         log.info("MAIN SERVICE LOG: user id " + userId + " creating event");
         Category category = categoryRepository.findById(newEventDto.getCategory())
-                .orElseThrow(() -> new NotFoundException(""));
+                .orElseThrow(() -> new NotFoundException("Category was not found"));
         LocalDateTime eventDate = newEventDto.getEventDate();
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
             throw new DateTimeException("Field: eventDate. Error: должно содержать дату, которая еще не наступила." +
@@ -60,9 +63,7 @@ public class EventServiceImpl implements EventService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
-        Event event = eventMapper.toEvent(newEventDto);
-        event.setCategory(category);
-        event.setInitiator(user);
+        Event event = eventMapper.toEvent(newEventDto, category,EventState.PENDING, user, LocalDateTime.now());
         log.info("MAIN SERVICE LOG: event created");
         return eventMapper.toEventFullDto(eventRepository.save(event));
     }

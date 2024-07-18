@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@RequiredArgsConstructor
 @Slf4j
 public class CompilationServiceImpl implements CompilationService {
 

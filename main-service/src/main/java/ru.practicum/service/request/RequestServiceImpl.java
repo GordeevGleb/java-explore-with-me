@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@RequiredArgsConstructor
 public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;

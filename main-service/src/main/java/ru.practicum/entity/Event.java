@@ -17,7 +17,7 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String annotation;
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category;
     @Column(name = "confirmed_requests")
@@ -27,7 +27,7 @@ public class Event {
     private String description;
     @Column(name = "event_date")
     private LocalDateTime eventDate;
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "initiator_id")
     private User initiator;
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
