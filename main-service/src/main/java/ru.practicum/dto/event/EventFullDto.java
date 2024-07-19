@@ -9,8 +9,6 @@ import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.entity.Location;
 import ru.practicum.enums.EventState;
-
-import javax.persistence.Column;
 import java.time.LocalDateTime;
 
 @Data
