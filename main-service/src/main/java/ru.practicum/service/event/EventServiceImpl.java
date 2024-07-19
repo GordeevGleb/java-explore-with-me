@@ -22,7 +22,6 @@ import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.UserRepository;
 import ru.practicum.service.stats.StatsService;
 
-import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;

@@ -4,7 +4,7 @@ import lombok.*;
 import ru.practicum.enums.EventState;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 
 @Data
