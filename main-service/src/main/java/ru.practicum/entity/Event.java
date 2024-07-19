@@ -4,6 +4,7 @@ import lombok.*;
 import ru.practicum.enums.EventState;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
@@ -21,7 +22,7 @@ public class Event {
     @JoinColumn(name = "category_id")
     private Category category;
     @Column(name = "confirmed_requests")
-    private long confirmedRequests;
+    private Long confirmedRequests;
     @Column(name = "created_on")
     private LocalDateTime createdOn;
     private String description;
@@ -45,5 +46,5 @@ public class Event {
     private EventState state;
     private String title;
     @Column(name = "views")
-    private long views;
+    private Long views;
 }

@@ -46,7 +46,8 @@ public class RequestServiceImpl implements RequestService {
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new IntegrityConflictException("Event was not published");
         }
-        if (requestRepository.findAllByEvent(eventId).size() >= event.getParticipantLimit()) {
+        if (requestRepository.findAllByEvent(eventId).size() >= event.getParticipantLimit() &&
+        event.getParticipantLimit() != 0) {
             throw new LimitException("Request limit has been reached");
         }
         Request actual = Request.builder()
@@ -58,6 +59,7 @@ public class RequestServiceImpl implements RequestService {
         if (event.getRequestModeration().equals(Boolean.FALSE) || event.getParticipantLimit() == 0) {
             actual.setStatus(RequestStatus.CONFIRMED);
         }
+        requestRepository.save(actual);
         ParticipationRequestDto participationRequestDto = requestMapper.toParticipationRequestDto(actual);
         log.info("MAIN SERVICE LOG: request created");
         return participationRequestDto;

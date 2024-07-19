@@ -8,6 +8,7 @@ import ru.practicum.enums.SortFormat;
 import ru.practicum.service.event.EventService;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -20,8 +21,8 @@ public class PublicEventController {
     public List<EventShortDto> getWithParams(@RequestParam(name = "text", required = false) String text,
                                    @RequestParam(name = "categories", required = false) List<Long> categories,
                                    @RequestParam(name = "paid", required = false) Boolean paid,
-                                   @RequestParam(name = "rangeStart", required = false) String rangeStart,
-                                   @RequestParam(name = "rangeEnd", required = false) String rangeEnd,
+                                   @RequestParam(name = "rangeStart", required = false) LocalDateTime rangeStart,
+                                   @RequestParam(name = "rangeEnd", required = false) LocalDateTime rangeEnd,
                                    @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
                                    @RequestParam(name = "sort", required = false) SortFormat sortFormat,
                                    @RequestParam(name = "from", required = false, defaultValue = "0") Integer from,

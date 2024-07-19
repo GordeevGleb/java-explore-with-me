@@ -21,11 +21,11 @@ public interface EventService {
 
     EventFullDto getByIdUser(Long userId, Long eventId);
 
-    List<EventFullDto> getWithParamsAdmin(List<Long> users, EventState states, List<Long> categoriesId,
+    List<EventFullDto> getWithParamsAdmin(List<Long> users, List<EventState> states, List<Long> categoriesId,
                                           LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);
 
-    List<EventShortDto> getWithParams(String text, List<Long> categories, Boolean paid, String rangeStart,
-                                       String rangeEnd, Boolean onlyAvailable, SortFormat sort, Integer from,
+    List<EventShortDto> getWithParams(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
+                                       LocalDateTime rangeEnd, Boolean onlyAvailable, SortFormat sort, Integer from,
                                        Integer size, HttpServletRequest request);
 
     EventFullDto getByIdPublic(Long id, HttpServletRequest request);

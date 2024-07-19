@@ -41,11 +41,11 @@ public class MainServiceExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ApiError handleDateTimeException(final DateTimeException e) {
         return ApiError.builder()
-                .status("FORBIDDEN")
+                .status("BAD_REQUEST")
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(dateTimeFormatter))
@@ -89,11 +89,11 @@ public class MainServiceExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ApiError handleEventStatusException(final EventStatusException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status("BAD_REQUEST")
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(dateTimeFormatter))
@@ -118,6 +118,18 @@ public class MainServiceExceptionHandler {
     public ApiError handleRequestStatusException(final RequestStatusException e) {
         return ApiError.builder()
                 .status("CONFLICT")
+                .reason("Incorrectly made request.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ApiError handleWrongInputException(final WrongInputException e) {
+        return ApiError.builder()
+                .status("BAD_REQUEST")
                 .reason("Incorrectly made request.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(dateTimeFormatter))

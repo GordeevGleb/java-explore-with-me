@@ -27,6 +27,6 @@ public class UpdateEventUserRequest {
     private Long participantLimit;
     private Boolean requestModeration;
     private UserStateAction stateAction;
-    @Size(min = 2, max = 120)
+    @Size(min = 3, max = 120)
     private String title;
 }

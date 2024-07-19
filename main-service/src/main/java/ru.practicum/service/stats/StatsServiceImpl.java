@@ -1,5 +1,6 @@
 package ru.practicum.service.stats;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.EndpointHitRequestDto;
@@ -10,6 +11,7 @@ import ru.practicum.entity.Event;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -83,11 +85,24 @@ public class StatsServiceImpl implements StatsService {
         String endTime = LocalDateTime.now().format(dateFormatter);
         List<String> uris = List.of("/events/" + event.getId());
 
-        List<ViewStatsResponseDto> stats = getStats(startTime, endTime, uris);
-        if (stats.size() == 1) {
-            event.setViews(stats.get(0).getHits());
+        Object responseBody = statsClient.getStatistics(startTime, endTime, uris, Boolean.TRUE).getBody();
+        if (responseBody == null) {
+            throw new IllegalArgumentException("Response body is null");
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<ViewStatsResponseDto> responseDtos = new ArrayList<>();
+        try {
+            responseDtos = objectMapper.readValue(
+                    objectMapper.writeValueAsString(responseBody),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, ViewStatsResponseDto.class));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse ResponseEntity to List<ViewStatsResponseDto>", e);
+        }
+
+        if (responseDtos.size() == 0) {
+            event.setViews(1L);
         } else {
-            event.setViews(0L);
+            event.setViews(Long.valueOf(responseDtos.size()));
         }
     }
 
