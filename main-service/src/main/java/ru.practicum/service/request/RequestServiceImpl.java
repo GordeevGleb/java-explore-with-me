@@ -82,36 +82,28 @@ public class RequestServiceImpl implements RequestService {
                                                          Long eventId,
                                                          EventRequestStatusUpdateRequest
                                                                      eventRequestStatusUpdateRequest) {
+        log.info("MAIN SERVICE LOG: updating requests");
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        List<Request> requests = requestRepository
+                .findAllByEventAndIdIn(eventId, eventRequestStatusUpdateRequest.getRequestIds());
         EventRequestStatusUpdateResult result = new EventRequestStatusUpdateResult();
-
-        if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
+        if (event.getParticipantLimit() == 0 || event.getRequestModeration().equals(Boolean.FALSE)) {
             return result;
         }
-
-        List<Request> requests = requestRepository.findAllByEventWithInitiator(userId, eventId).stream()
-                .filter(request -> eventRequestStatusUpdateRequest.getRequestIds().contains(request.getId()))
-                .collect(Collectors.toList());
-        if (requests.stream().anyMatch(request -> request.getStatus().equals(RequestStatus.CONFIRMED)
-                && eventRequestStatusUpdateRequest.getStatus().equals(RequestStatus.REJECTED))) {
-            throw new RequestStatusException("request already confirmed");
+        if (requests.stream().anyMatch(request -> !request.getStatus().equals(RequestStatus.PENDING))) {
+            throw new RequestStatusException("Request must have status PENDING");
         }
-
-        if (event.getConfirmedRequests() + requests.size() > event.getParticipantLimit() && eventRequestStatusUpdateRequest.getStatus().equals(RequestStatus.CONFIRMED)) {
+        if (event.getParticipantLimit() != 0 &&
+                requestRepository.countByEventAndStatusIs(eventId, RequestStatus.CONFIRMED) >= event.getParticipantLimit()) {
             throw new IntegrityConflictException("The participant limit has been reached");
         }
-
-        if (requests.stream().allMatch(request -> !request.getStatus().equals(RequestStatus.PENDING))) {
-            throw new RequestStatusException("Wrong request status exception");
-        }
-
-        if (eventRequestStatusUpdateRequest.getStatus().equals(RequestStatus.CONFIRMED)) {
+        if (RequestStatus.CONFIRMED.equals(eventRequestStatusUpdateRequest.getStatus())) {
             requests.stream().forEach(request -> {
                 if (event.getConfirmedRequests() < event.getParticipantLimit()) {
                     request.setStatus(RequestStatus.CONFIRMED);
                     event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-                } else {
+                } else if (event.getConfirmedRequests() >= event.getParticipantLimit()) {
                     request.setStatus(RequestStatus.REJECTED);
                 }
             });
@@ -120,14 +112,16 @@ public class RequestServiceImpl implements RequestService {
         }
         requestRepository.saveAll(requests);
         eventRepository.save(event);
-        for (Request request : requests) {
-            if (request.getStatus().equals(RequestStatus.CONFIRMED)) {
-                result.getConfirmedRequests().add(requestMapper.toParticipationRequestDto(request));
-            }
-            if (request.getStatus().equals(RequestStatus.REJECTED)) {
-                result.getRejectedRequests().add(requestMapper.toParticipationRequestDto(request));
-            }
-        }
+        List<ParticipationRequestDto> participationRequestDtos = requestMapper.toParticipationRequestDtoList(requests);
+        participationRequestDtos.stream()
+                        .forEach(participationRequestDto -> {
+                            if (participationRequestDto.getStatus().equals(RequestStatus.CONFIRMED)) {
+                                result.getConfirmedRequests().add(participationRequestDto);
+                            } else if (participationRequestDto.getStatus().equals(RequestStatus.REJECTED)) {
+                                result.getRejectedRequests().add(participationRequestDto);
+                            }
+                        });
+        log.info("MAIN SERVICE LOG: requests updated");
         return result;
     }
 

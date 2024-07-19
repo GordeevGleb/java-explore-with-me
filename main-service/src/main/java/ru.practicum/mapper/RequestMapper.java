@@ -12,4 +12,5 @@ public interface RequestMapper {
     ParticipationRequestDto toParticipationRequestDto(Request request);
 
     List<ParticipationRequestDto> toParticipationRequestDtoList(List<Request> requests);
+
 }
