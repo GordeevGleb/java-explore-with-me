@@ -83,11 +83,11 @@ public class EventServiceImpl implements EventService {
             return eventMapper.toEventFullDto(event);
         }
         if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new EventStatusException("Cannot publish the event because of date time restriction");
+            throw new EventDateTimeException("Cannot publish the event because of date time restriction");
         }
         if (updateEventAdminRequest.getEventDate() != null &&
                 updateEventAdminRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new EventStatusException("Cannot publish the event because of date time restriction");
+            throw new EventDateTimeException("Cannot publish the event because of date time restriction");
         }
 
         if (updateEventAdminRequest.getAnnotation() != null) {

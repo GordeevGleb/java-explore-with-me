@@ -89,11 +89,11 @@ public class MainServiceExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.CONFLICT)
     @ResponseBody
     public ApiError handleEventStatusException(final EventStatusException e) {
         return ApiError.builder()
-                .status("BAD_REQUEST")
+                .status("CONFLICT")
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(dateTimeFormatter))
@@ -131,6 +131,18 @@ public class MainServiceExceptionHandler {
         return ApiError.builder()
                 .status("BAD_REQUEST")
                 .reason("Incorrectly made request.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ApiError handleEventDateTimeExcpetion(final EventDateTimeException e) {
+        return ApiError.builder()
+                .status("BAD_REQUEST")
+                .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(dateTimeFormatter))
                 .build();
