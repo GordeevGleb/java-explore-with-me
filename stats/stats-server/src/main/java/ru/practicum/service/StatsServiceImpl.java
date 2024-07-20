@@ -44,11 +44,8 @@ public class StatsServiceImpl implements StatsService {
         List<ViewStatsResponseDto> resultList;
         if (uris != null) {
             resultList = unique.equals(Boolean.TRUE) ? statsMapper
-                    .toListViewStatsResponseDto
-                            (statsRepository.findUniqueByUris(startTime, endTime, uris)) :
-                    statsMapper
-                            .toListViewStatsResponseDto
-                                    (statsRepository.findByUris(startTime,endTime, uris));
+                    .toListViewStatsResponseDto(statsRepository.findUniqueByUris(startTime, endTime, uris)) :
+                    statsMapper.toListViewStatsResponseDto(statsRepository.findByUris(startTime,endTime, uris));
         } else {
             resultList = unique.equals(Boolean.TRUE) ? statsMapper
                     .toListViewStatsResponseDto(statsRepository.findUnique(startTime,endTime)) :
