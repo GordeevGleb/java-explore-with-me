@@ -89,7 +89,7 @@ public class MainServiceExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ApiError handleEventStatusException(final EventStatusException e) {
         return ApiError.builder()
