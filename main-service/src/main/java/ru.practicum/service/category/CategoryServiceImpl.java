@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.dto.category.CategoryDto;
 import ru.practicum.dto.category.NewCategoryDto;
 import ru.practicum.entity.Category;
+import ru.practicum.exception.CategoryNotEmptyException;
 import ru.practicum.exception.ConcurrentNameException;
 import ru.practicum.exception.IntegrityConflictException;
 import ru.practicum.exception.NotFoundException;
@@ -64,7 +65,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category actual = categoryRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Category with id=" + id + " was not found"));
         if (eventRepository.existsByCategoryId(id)) {
-            throw new IntegrityConflictException("The category is not empty");
+            throw new CategoryNotEmptyException("The category is not empty");
         }
         categoryRepository.delete(actual);
         log.info("MAIN SERVICE LOG: category removed");

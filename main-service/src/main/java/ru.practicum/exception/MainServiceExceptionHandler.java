@@ -53,11 +53,11 @@ public class MainServiceExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ApiError handleIntegrityConflictException(final IntegrityConflictException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status("BAD_REQUEST")
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(dateTimeFormatter))
@@ -139,9 +139,33 @@ public class MainServiceExceptionHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public ApiError handleEventDateTimeExcpetion(final EventDateTimeException e) {
+    public ApiError handleEventDateTimeException(final EventDateTimeException e) {
         return ApiError.builder()
                 .status("BAD_REQUEST")
+                .reason("For the requested operation the conditions are not met.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseBody
+    public ApiError handleCategoryNotEmptyException(final CategoryNotEmptyException e) {
+        return ApiError.builder()
+                .status("CONFLICT")
+                .reason("For the requested operation the conditions are not met.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseBody
+    public ApiError handleWrongUserRequestException(final WrongUserRequestException e) {
+        return ApiError.builder()
+                .status("CONFLICT")
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(dateTimeFormatter))

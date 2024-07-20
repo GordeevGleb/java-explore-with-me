@@ -165,7 +165,7 @@ public class EventServiceImpl implements EventService {
         }
         if (Optional.ofNullable(updateEventUserRequest.getEventDate()).isPresent()) {
             if (updateEventUserRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
-                throw new EventStatusException("Event date exception");
+                throw new EventDateTimeException("Event date exception");
             }
             event.setEventDate(updateEventUserRequest.getEventDate());
         }
