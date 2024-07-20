@@ -212,9 +212,9 @@ public class EventServiceImpl implements EventService {
         log.info("MAIN SERVICE LOG: getting event id " + eventId + " by user id " + userId);
         Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
-        if (actual.getPublishedOn() == null) {
-            throw new NotFoundException("Event with id=" + eventId + " was not found");
-        }
+//        if (actual.getPublishedOn() == null) {
+//            throw new NotFoundException("Event with id=" + eventId + " was not found");
+//        }
         log.info("MAIN SERVICE LOG: event found");
         return eventMapper.toEventFullDto(actual);
     }

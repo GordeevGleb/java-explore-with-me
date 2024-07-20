@@ -101,11 +101,11 @@ public class MainServiceExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.CONFLICT)
     @ResponseBody
     public ApiError handleWrongRequestException(final WrongRequestException e) {
         return ApiError.builder()
-                .status("BAD_REQUEST")
+                .status("CONFLICT")
                 .reason("Incorrectly made request.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now().format(dateTimeFormatter))

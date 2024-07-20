@@ -43,7 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<CategoryDto> get(Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get categories");
-        PageRequest pageRequest = PageRequest.of(from / size, size);
+        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
         List<Category> actual = categoryRepository.findAll(pageRequest).toList();
         log.info("MAIN SERVICE LOG: categries list formed");
         return categoryMapper.toCategoryDtoList(actual);

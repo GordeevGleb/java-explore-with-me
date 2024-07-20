@@ -116,19 +116,18 @@ public class RequestServiceImpl implements RequestService {
                 }
             });
         } else {
-            requests.stream().forEach(request -> request.setStatus(eventRequestStatusUpdateRequest.getStatus()));
+            requests.forEach(request -> request.setStatus(eventRequestStatusUpdateRequest.getStatus()));
         }
         requestRepository.saveAll(requests);
         eventRepository.save(event);
-        requests.stream()
-                        .forEach(request -> {
-                            if (request.getStatus().equals(RequestStatus.CONFIRMED)) {
-                                result.getConfirmedRequests().add(requestMapper.toParticipationRequestDto(request));
-                            }
-                            if (request.getStatus().equals(RequestStatus.REJECTED)) {
-                                result.getRejectedRequests().add(requestMapper.toParticipationRequestDto(request));
-                            }
-                        });
+        requests.forEach(request -> {
+            if (request.getStatus().equals(RequestStatus.CONFIRMED)) {
+                result.getConfirmedRequests().add(requestMapper.toParticipationRequestDto(request));
+            }
+            if (request.getStatus().equals(RequestStatus.REJECTED)) {
+                result.getRejectedRequests().add(requestMapper.toParticipationRequestDto(request));
+            }
+        });
         log.info("MAIN SERVICE LOG: requests updated");
         return result;
     }
@@ -148,8 +147,8 @@ public class RequestServiceImpl implements RequestService {
         log.info("MAIN SERVICE LOG: user id " + userId + " cancel request id " + requestId);
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Request with id=" + requestId + " was not found"));
-        request.setStatus(RequestStatus.PENDING);
+        request.setStatus(RequestStatus.CANCELED);
         log.info("MAIN SERVICE LOG: request cancelled");
-        return requestMapper.toParticipationRequestDto(request);
+        return requestMapper.toParticipationRequestDto(requestRepository.save(request));
     }
 }
