@@ -9,7 +9,6 @@ import ru.practicum.dto.category.NewCategoryDto;
 import ru.practicum.entity.Category;
 import ru.practicum.exception.CategoryNotEmptyException;
 import ru.practicum.exception.ConcurrentNameException;
-import ru.practicum.exception.IntegrityConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CategoryMapper;
 import ru.practicum.repository.CategoryRepository;
