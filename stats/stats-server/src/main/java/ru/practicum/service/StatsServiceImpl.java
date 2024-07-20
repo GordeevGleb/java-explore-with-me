@@ -8,11 +8,14 @@ import ru.practicum.EndpointHitResponseDto;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.EndpointHit;
 import ru.practicum.entity.ViewStats;
+import ru.practicum.exception.DateTimeException;
 import ru.practicum.mapper.StatsMapper;
 import ru.practicum.repository.StatsRepository;
 import ru.practicum.util.StatsDateTimeFormatter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,18 +41,27 @@ public class StatsServiceImpl implements StatsService {
         log.info("STATS SERVER LOG: getStats");
         LocalDateTime startTime = statsDateTimeFormatter.format(start);
         LocalDateTime endTime = statsDateTimeFormatter.format(end);
-        List<ViewStats> result;
+        if (endTime.isBefore(startTime)) {
+            throw new DateTimeException("Date time exception");
+        }
+        List<ViewStatsResponseDto> resultList = new ArrayList<>();
         if (uris != null) {
             if (unique) {
-                result = statsRepository.findAllByTimeAndListOfUrisAndUniqueIp(startTime, endTime, uris);
-            } else {
-                result = statsRepository.findAllByTimeAndListOfUris(startTime, endTime, uris);
+                resultList = statsMapper
+                        .toListViewStatsResponseDto
+                                (statsRepository.findEndpointHitsWithUniqueIpWithUris(startTime, endTime, uris));
             }
-        } else if (unique) {
-            result = statsRepository.findAllByTimeAndUniqueIp(startTime, endTime);
+            resultList = statsMapper
+                    .toListViewStatsResponseDto(statsRepository.findEndpointHitsWithUris(startTime,endTime, uris));
         } else {
-            result = statsRepository.findAllByTime(startTime, endTime);
+            if (unique) {
+                resultList = statsMapper
+                        .toListViewStatsResponseDto(statsRepository.findEndpointHitsWithUniqueIp(startTime,endTime));
+            }
+            resultList = statsMapper.toListViewStatsResponseDto(statsRepository.findEndpointHits(startTime, endTime));
         }
-        return statsMapper.toListViewStatsResponseDto(result);
+        log.info("STATS SERVER LOG: stats list formed");
+        return resultList;
     }
 }
+

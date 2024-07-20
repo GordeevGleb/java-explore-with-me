@@ -2,8 +2,8 @@ package ru.practicum.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.EndpointHit;
 import ru.practicum.entity.ViewStats;
 
@@ -13,38 +13,33 @@ import java.util.List;
 @Repository
 public interface StatsRepository extends JpaRepository<EndpointHit, Long> {
 
-    @Query("SELECT new ru.practicum.entity.ViewStats(e.app, e.uri, COUNT(e.ip)) " +
-            "FROM EndpointHit as e " +
-            "WHERE e.timestamp BETWEEN :startTime AND :endTime " +
-            "AND e.uri IN :uris " +
-            "GROUP BY e.app, e.uri " +
-            "ORDER BY COUNT(e.ip) DESC")
-    List<ViewStats> findAllByTimeAndListOfUris(@Param("startTime") LocalDateTime startTime,
-                                                  @Param("endTime") LocalDateTime endTime,
-                                                  @Param("uris") List<String> uris);
 
-    @Query("SELECT new ru.practicum.entity.ViewStats(e.app, e.uri, COUNT(DISTINCT e.ip)) " +
-            "FROM EndpointHit as e " +
-            "WHERE e.timestamp BETWEEN :startTime AND :endTime " +
-            "AND e.uri IN :uris " +
-            "GROUP BY e.app, e.uri " +
-            "ORDER BY COUNT(e.ip) DESC")
-    List<ViewStats> findAllByTimeAndListOfUrisAndUniqueIp(@Param("startTime") LocalDateTime startTime,
-                                                             @Param("endTime") LocalDateTime endTime,
-                                                             @Param("uris") List<String> uris);
+    @Query(value = "SELECT * FROM ( " +
+            "SELECT distinct on (s.uri) s.app, s.uri , ss.hits from ( " +
+            " SELECT uri, count(uri) as hits " +
+            " FROM stats WHERE timestamp >= ?1 and timestamp <= ?2 GROUP BY uri ) ss " +
+            "JOIN endpointhits s on s.uri = ss.uri ) t ORDER BY t.hits DESC;", nativeQuery = true)
+    List<ViewStats> findEndpointHits(LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT new ru.practicum.entity.ViewStats(e.app, e.uri, COUNT(e.ip)) " +
-            "FROM EndpointHit as e " +
-            "WHERE e.timestamp BETWEEN :startTime AND :endTime " +
-            "GROUP BY e.app, e.uri")
-    List<ViewStats> findAllByTime(@Param("startTime") LocalDateTime startTime,
-                                     @Param("endTime") LocalDateTime endTime);
+    @Query(value = "SELECT * FROM ( " +
+            "SELECT distinct on (ss.uri) s.app, ss.uri, ss.hits FROM ( " +
+            "SELECT uri, count(distinct ip) as hits from stats WHERE timestamp >= ?1 and timestamp <= ?2 " +
+            "group by uri ORDER BY hits DESC " +
+            ") ss JOIN stats s on s.uri = ss.uri ) t ORDER BY t.hits DESC;", nativeQuery = true)
+    List<ViewStats> findEndpointHitsWithUniqueIp(LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT new ru.practicum.entity.ViewStats(e.app, e.uri, COUNT(DISTINCT e.ip)) " +
-            "FROM EndpointHit as e " +
-            "WHERE e.timestamp BETWEEN :startTime AND :endTime " +
-            "GROUP BY e.app, e.uri")
-    List<ViewStats> findAllByTimeAndUniqueIp(@Param("startTime") LocalDateTime startTime,
-                                                @Param("endTime") LocalDateTime endTime);
+    @Query(value = "SELECT * FROM ( " +
+            "SELECT distinct on (s.uri) s.app, s.uri , ss.hits from ( " +
+            " SELECT uri, count(uri) as hits " +
+            " FROM stats WHERE uri in ?3 and timestamp >= ?1 and timestamp <= ?2 GROUP BY uri ) ss " +
+            "JOIN stats s on s.uri = ss.uri ) t ORDER BY t.hits DESC;", nativeQuery = true)
+    List<ViewStats> findEndpointHitsWithUris(LocalDateTime start, LocalDateTime end, List<String> uris);
+
+    @Query(value = "SELECT * FROM ( " +
+            "SELECT distinct on (ss.uri) s.app,ss.uri, ss.hits FROM ( " +
+            "SELECT uri, count(distinct ip) as hits from stats WHERE uri in ?3 and timestamp >= ?1 " +
+            "and timestamp <= ?2 group by uri ORDER BY hits DESC " +
+            ") ss JOIN stats s on s.uri = ss.uri ) t ORDER BY t.hits DESC;", nativeQuery = true)
+    List<ViewStats> findEndpointHitsWithUniqueIpWithUris(LocalDateTime start, LocalDateTime end, List<String> uris);
 
 }
