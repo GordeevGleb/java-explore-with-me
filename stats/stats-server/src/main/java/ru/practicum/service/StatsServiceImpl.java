@@ -12,7 +12,6 @@ import ru.practicum.mapper.StatsMapper;
 import ru.practicum.repository.StatsRepository;
 import ru.practicum.util.StatsDateTimeFormatter;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,20 +41,18 @@ public class StatsServiceImpl implements StatsService {
         if (endTime.isBefore(startTime)) {
             throw new DateTimeException("Date time exception");
         }
-        List<ViewStatsResponseDto> resultList = new ArrayList<>();
+        List<ViewStatsResponseDto> resultList;
         if (uris != null) {
-            if (unique) {
-                resultList = statsMapper
-                        .toListViewStatsResponseDto(statsRepository.findEndpointHitsWithUniqueIpWithUris(startTime, endTime, uris));
-            }
-            resultList = statsMapper
-                    .toListViewStatsResponseDto(statsRepository.findEndpointHitsWithUris(startTime,endTime, uris));
+            resultList = unique.equals(Boolean.TRUE) ? statsMapper
+                    .toListViewStatsResponseDto
+                            (statsRepository.findUniqueByUris(startTime, endTime, uris)) :
+                    statsMapper
+                            .toListViewStatsResponseDto
+                                    (statsRepository.findByUris(startTime,endTime, uris));
         } else {
-            if (unique) {
-                resultList = statsMapper
-                        .toListViewStatsResponseDto(statsRepository.findEndpointHitsWithUniqueIp(startTime,endTime));
-            }
-            resultList = statsMapper.toListViewStatsResponseDto(statsRepository.findEndpointHits(startTime, endTime));
+            resultList = unique.equals(Boolean.TRUE) ? statsMapper
+                    .toListViewStatsResponseDto(statsRepository.findUnique(startTime,endTime)) :
+                    statsMapper.toListViewStatsResponseDto(statsRepository.findAll(startTime, endTime));
         }
         log.info("STATS SERVER LOG: stats list formed");
         return resultList;

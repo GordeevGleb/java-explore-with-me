@@ -57,7 +57,7 @@ public class StatsServiceImpl implements StatsService {
     public void sendStatForTheEvent(Long eventId, String remoteAddr, LocalDateTime now,
                                     String nameService) {
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(now)
                 .uri("/events" + eventId)
                 .app(nameService)
                 .ip(remoteAddr)
@@ -102,7 +102,7 @@ public class StatsServiceImpl implements StatsService {
         if (responseDtos.size() == 0) {
             event.setViews(1L);
         } else {
-            event.setViews(Long.valueOf(responseDtos.size()));
+            event.setViews((long) responseDtos.size());
         }
     }
 
