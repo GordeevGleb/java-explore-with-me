@@ -7,7 +7,6 @@ import ru.practicum.EndpointHitRequestDto;
 import ru.practicum.EndpointHitResponseDto;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.EndpointHit;
-import ru.practicum.entity.ViewStats;
 import ru.practicum.exception.DateTimeException;
 import ru.practicum.mapper.StatsMapper;
 import ru.practicum.repository.StatsRepository;
@@ -15,7 +14,6 @@ import ru.practicum.util.StatsDateTimeFormatter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,8 +46,7 @@ public class StatsServiceImpl implements StatsService {
         if (uris != null) {
             if (unique) {
                 resultList = statsMapper
-                        .toListViewStatsResponseDto
-                                (statsRepository.findEndpointHitsWithUniqueIpWithUris(startTime, endTime, uris));
+                        .toListViewStatsResponseDto(statsRepository.findEndpointHitsWithUniqueIpWithUris(startTime, endTime, uris));
             }
             resultList = statsMapper
                     .toListViewStatsResponseDto(statsRepository.findEndpointHitsWithUris(startTime,endTime, uris));

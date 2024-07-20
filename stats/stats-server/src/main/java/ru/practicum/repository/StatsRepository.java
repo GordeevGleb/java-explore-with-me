@@ -3,7 +3,6 @@ package ru.practicum.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.EndpointHit;
 import ru.practicum.entity.ViewStats;
 
