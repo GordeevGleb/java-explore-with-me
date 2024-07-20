@@ -98,6 +98,6 @@ log.info("MAIN SERVICE LOG: compilation removed");
             actual.setTitle(updateCompilationRequest.getTitle());
         }
         log.info("MAIN SERVICE LOG: compilation id " + id + " updated");
-        return compilationMapper.toCompilationDto(actual);
+        return compilationMapper.toCompilationDto(compilationRepository.save(actual));
     }
 }
