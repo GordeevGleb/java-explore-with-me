@@ -27,8 +27,6 @@ import java.util.Optional;
 public class CompilationServiceImpl implements CompilationService {
 
     private final EventRepository eventRepository;
-    private final EventService eventService;
-    private final EntityManager entityManager;
     private final CompilationRepository compilationRepository;
     private final CompilationMapper compilationMapper;
 
