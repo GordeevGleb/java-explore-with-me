@@ -13,6 +13,7 @@ import ru.practicum.mapper.UserMapper;
 import ru.practicum.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -41,8 +42,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> get(List<Long> ids, Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get users list");
-        PageRequest pageRequest = PageRequest.of(from / size, size);
-        if (ids.isEmpty()) {
+        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
+        if (Optional.ofNullable(ids).isEmpty() || ids.isEmpty()) {
             List<UserDto> resultList = userMapper.toUserDtoList(userRepository.findAll(pageRequest).toList());
             log.info("MAIN SERVICE LOG: list of all users formed");
             return resultList;

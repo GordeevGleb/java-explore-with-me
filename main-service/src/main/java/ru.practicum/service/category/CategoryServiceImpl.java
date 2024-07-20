@@ -75,7 +75,8 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("MAIN SERVICE LOG: updating category id " + id);
         Category actual = categoryRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Category with id=" + id + " was not found"));
-        if (categoryRepository.existsByName(newCategoryDto.getName())) {
+        if (categoryRepository.existsByName(newCategoryDto.getName()) &&
+         !actual.getName().equals(newCategoryDto.getName())) {
             throw new ConcurrentNameException("could not execute statement; SQL [n/a];" +
                     " constraint [uq_category_name];" +
                     " nested exception is org.hibernate.exception.ConstraintViolationException:" +

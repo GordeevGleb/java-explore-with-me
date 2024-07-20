@@ -19,6 +19,7 @@ import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -95,16 +96,18 @@ public class RequestServiceImpl implements RequestService {
         if (requests.stream().anyMatch(request -> !request.getStatus().equals(RequestStatus.PENDING))) {
             throw new RequestStatusException("Request must have status PENDING");
         }
-        if (event.getParticipantLimit() != 0 &&
-                requestRepository.countByEventAndStatusIs(eventId, RequestStatus.CONFIRMED) >= event.getParticipantLimit()) {
+        if (requestRepository.countByEventAndStatusIs(eventId, RequestStatus.CONFIRMED) > event.getParticipantLimit()) {
             throw new IntegrityConflictException("The participant limit has been reached");
+        }
+        if (Optional.ofNullable(event.getConfirmedRequests()).isEmpty()) {
+            event.setConfirmedRequests(0L);
         }
         if (RequestStatus.CONFIRMED.equals(eventRequestStatusUpdateRequest.getStatus())) {
             requests.stream().forEach(request -> {
-                if (event.getConfirmedRequests() < event.getParticipantLimit()) {
+                if (event.getConfirmedRequests() <= event.getParticipantLimit()) {
                     request.setStatus(RequestStatus.CONFIRMED);
                     event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-                } else if (event.getConfirmedRequests() >= event.getParticipantLimit()) {
+                } else if (event.getConfirmedRequests() > event.getParticipantLimit()) {
                     request.setStatus(RequestStatus.REJECTED);
                 }
             });

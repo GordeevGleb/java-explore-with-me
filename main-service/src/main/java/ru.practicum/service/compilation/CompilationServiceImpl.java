@@ -16,8 +16,10 @@ import ru.practicum.repository.EventRepository;
 import ru.practicum.service.event.EventService;
 
 import javax.persistence.EntityManager;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,10 +35,18 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     public CompilationDto create(NewCompilationDto newCompilationDto) {
         log.info("MAIN SERVICE LOG: creating new compilation");
-List<Event> events = eventRepository.findAllByIdIn(newCompilationDto.getEvents());
-Compilation actual = compilationMapper.toCompilation(newCompilationDto, new HashSet<>(events));
-CompilationDto savedCompilation = compilationMapper.toCompilationDto(compilationRepository.save(actual));
-log.info("MAIN SERVICE LOG: compilation created");
+        List<Event> events;
+        if (Optional.ofNullable(newCompilationDto.getEvents()).isPresent()) {
+            events = eventRepository.findAllByIdIn(newCompilationDto.getEvents());
+        } else {
+            events = new ArrayList<>();
+        }
+        Compilation actual = compilationMapper.toCompilation(newCompilationDto, new HashSet<>(events));
+        if (Optional.ofNullable(newCompilationDto.getPinned()).isEmpty()) {
+            actual.setPinned(Boolean.FALSE);
+        }
+        CompilationDto savedCompilation = compilationMapper.toCompilationDto(compilationRepository.save(actual));
+        log.info("MAIN SERVICE LOG: compilation created");
         return savedCompilation;
     }
 
@@ -53,7 +63,7 @@ log.info("MAIN SERVICE LOG: compilation created");
     public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get compilations");
         PageRequest pageRequest = PageRequest.of(from / size, size);
-        if (pinned) {
+        if (Optional.ofNullable(pinned).isPresent() && pinned.equals(Boolean.TRUE)) {
             List<Compilation> resultList = compilationRepository.findByPinned(pageRequest, pinned);
             log.info("MAIN SERVICE LOG: pinned compilation list formed");
             return compilationMapper.toListCompilationDto(resultList);
