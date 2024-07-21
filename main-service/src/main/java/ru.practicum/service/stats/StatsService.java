@@ -6,19 +6,10 @@ import ru.practicum.entity.Event;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public interface StatsService {
-    void sendStat(Event event, HttpServletRequest request);
+    void sendStat(HttpServletRequest request);
 
-    void sendStat(List<Event> events, HttpServletRequest request);
-
-    void sendStatForTheEvent(Long eventId, String remoteAddr, LocalDateTime now,
-                             String nameService);
-
-    void sendStatForEveryEvent(List<Event> events, String remoteAddr, LocalDateTime now,
-                               String nameService);
-
-    void setView(Event event);
-
-    List<ViewStatsResponseDto> getStats(String startTime, String endTime, List<String> uris);
+    Map<Long, Long> getView(List<Event> events);
 }

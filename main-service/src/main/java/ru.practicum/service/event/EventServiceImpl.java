@@ -251,7 +251,6 @@ public class EventServiceImpl implements EventService {
                 event.setConfirmedRequests(0L);
             }
         });
-        setView(events);
         log.info("MAIN SERVICE LOG: event list formed");
         return eventMapper.toEventFullDtoList(events);
     }
@@ -306,9 +305,10 @@ public class EventServiceImpl implements EventService {
         };
         List<Event> events = eventRepository.findAll(specification, pageRequest).stream()
                 .collect(Collectors.toList());
-
-        setView(events);
-        statsService.sendStat(events, request);
+        statsService.sendStat(request);
+        Map<Long, Long> views = statsService.getView(events);
+        events = events.stream().peek(event -> event.setViews(views.getOrDefault(event.getId(), 0L)))
+                .collect(Collectors.toList());
         return eventMapper.toEventShortDtoList(events);
     }
 
@@ -317,33 +317,10 @@ public class EventServiceImpl implements EventService {
         log.info("MAIN SERVICE LOG: get event id " + id);
         Event event = eventRepository.findByIdAndPublishedOnIsNotNull(id)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
+        statsService.sendStat(request);
+        Map<Long, Long> views = statsService.getView(List.of(event));
+        event.setViews(views.getOrDefault(event.getId(), 0L));
         log.info("MAIN SERVICE LOG: event id " + id + " found");
-        statsService.setView(event);
-        statsService.sendStat(event, request);
         return eventMapper.toEventFullDto(event);
-    }
-
-    @Override
-    public void setView(List<Event> events) {
-        LocalDateTime start = events.get(0).getCreatedOn();
-        List<String> uris = new ArrayList<>();
-        Map<String, Event> eventsUri = new HashMap<>();
-        String uri = "";
-        for (Event event : events) {
-            if (start.isBefore(event.getCreatedOn())) {
-                start = event.getCreatedOn();
-            }
-            uri = "/events/" + event.getId();
-            uris.add(uri);
-            eventsUri.put(uri, event);
-            event.setViews(0L);
-        }
-
-        String startTime = start.format(dateFormatter);
-        String endTime = LocalDateTime.now().format(dateFormatter);
-
-        List<ViewStatsResponseDto> stats = statsService.getStats(startTime, endTime, uris);
-        stats.forEach((stat) ->
-                eventsUri.get(stat.getUri()).setViews(stat.getHits()));
     }
 }

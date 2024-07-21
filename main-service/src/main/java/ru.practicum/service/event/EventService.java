@@ -29,6 +29,4 @@ public interface EventService {
                                        Integer size, HttpServletRequest request);
 
     EventFullDto getByIdPublic(Long id, HttpServletRequest request);
-
-    void setView(List<Event> events);
 }

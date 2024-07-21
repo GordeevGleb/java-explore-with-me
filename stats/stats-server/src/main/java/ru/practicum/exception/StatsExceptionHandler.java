@@ -16,7 +16,7 @@ public class StatsExceptionHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleDateTimeException(final DateTimeException e) {
         return Map.of("ERROR: ", e.getMessage());
     }
