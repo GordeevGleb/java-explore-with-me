@@ -26,7 +26,7 @@ public class StatsServiceImpl implements StatsService {
         String nameService = "main-service";
 
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                .timestamp(now)
+                .timestamp(now.format(dateFormatter))
                 .uri("/events")
                 .app(nameService)
                 .ip(remoteAddr)
@@ -42,7 +42,7 @@ public class StatsServiceImpl implements StatsService {
         String nameService = "main-service";
 
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                .timestamp(now)
+                .timestamp(now.format(dateFormatter))
                 .uri("/events")
                 .app(nameService)
                 .ip(remoteAddr)
@@ -55,7 +55,7 @@ public class StatsServiceImpl implements StatsService {
     public void sendStatForTheEvent(Long eventId, String remoteAddr, LocalDateTime now,
                                     String nameService) {
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                .timestamp(now)
+                .timestamp(now.format(dateFormatter))
                 .uri("/events" + eventId)
                 .app(nameService)
                 .ip(remoteAddr)
@@ -68,7 +68,7 @@ public class StatsServiceImpl implements StatsService {
                                       String nameService) {
         for (Event event : events) {
             EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                    .timestamp(now)
+                    .timestamp(now.format(dateFormatter))
                     .uri("/events" + event.getId())
                     .app(nameService)
                     .ip(remoteAddr)

@@ -212,9 +212,6 @@ public class EventServiceImpl implements EventService {
         log.info("MAIN SERVICE LOG: getting event id " + eventId + " by user id " + userId);
         Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
-//        if (actual.getPublishedOn() == null) {
-//            throw new NotFoundException("Event with id=" + eventId + " was not found");
-//        }
         log.info("MAIN SERVICE LOG: event found");
         return eventMapper.toEventFullDto(actual);
     }
@@ -316,7 +313,7 @@ public class EventServiceImpl implements EventService {
         log.info("MAIN SERVICE LOG: get event id " + id);
         Event event = eventRepository.findByIdAndPublishedOnIsNotNull(id)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
-        statsService.setView(event);
+        setView(List.of(event));
         statsService.sendStat(event, request);
         log.info("MAIN SERVICE LOG: event id " + id + " found");
         return eventMapper.toEventFullDto(event);
@@ -341,7 +338,6 @@ public class EventServiceImpl implements EventService {
         String endTime = LocalDateTime.now().format(dateFormatter);
 
         List<ViewStatsResponseDto> stats = statsService.getStats(startTime, endTime, uris);
-        stats.forEach((stat) ->
-                eventsUri.get(stat.getUri()).setViews(stat.getHits()));
+        stats.forEach(stat -> eventsUri.get(stat.getUri()).setViews(stat.getHits()));
     }
 }
