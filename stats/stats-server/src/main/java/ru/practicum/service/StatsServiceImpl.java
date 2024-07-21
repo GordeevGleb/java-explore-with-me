@@ -30,6 +30,7 @@ public class StatsServiceImpl implements StatsService {
         log.info("STATS SERVER LOG: postHit");
         EndpointHit actual = statsMapper.toEndpointHit(endpointHitRequestDto);
         statsRepository.save(actual);
+        log.info("STATS SERVER LOG: endpointHit posted");
         return statsMapper.toEndpointHitResponseDto(actual);
     }
 

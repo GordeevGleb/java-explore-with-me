@@ -21,57 +21,83 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StatsServiceImpl implements StatsService {
 
-    private final StatsClient statsClient;
+    private final StatsClient statClient;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public void sendStat(HttpServletRequest request) {
+    public void sendStat(Event event, HttpServletRequest request) {
         LocalDateTime now = LocalDateTime.now();
         String remoteAddr = request.getRemoteAddr();
         String nameService = "main-service";
 
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(now)
                 .uri("/events")
                 .app(nameService)
                 .ip(remoteAddr)
                 .build();
-        statsClient.postHit(requestDto);
+        statClient.addStats(requestDto);
+        sendStatForTheEvent(event.getId(), remoteAddr, now, nameService);
     }
 
     @Override
-    public Map<Long, Long> getView(List<Event> events) {
-        String startTime = events.stream()
-                .map(Event::getCreatedOn)
-                .min(LocalDateTime::compareTo)
-                .orElseThrow(() -> new NotFoundException("date time not found exception"))
-                .format(dateFormatter);
+    public void sendStat(List<Event> events, HttpServletRequest request) {
+        LocalDateTime now = LocalDateTime.now();
+        String remoteAddr = request.getRemoteAddr();
+        String nameService = "main-service";
+
+        EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
+                .timestamp(now)
+                .uri("/events")
+                .app(nameService)
+                .ip(remoteAddr)
+                .build();
+        statClient.addStats(requestDto);
+        sendStatForEveryEvent(events, remoteAddr, LocalDateTime.now(), nameService);
+    }
+
+    @Override
+    public void sendStatForTheEvent(Long eventId, String remoteAddr, LocalDateTime now,
+                                    String nameService) {
+        EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
+                .timestamp(now)
+                .uri("/events" + eventId)
+                .app(nameService)
+                .ip(remoteAddr)
+                .build();
+        statClient.addStats(requestDto);
+    }
+
+    @Override
+    public void sendStatForEveryEvent(List<Event> events, String remoteAddr, LocalDateTime now,
+                                      String nameService) {
+        for (Event event : events) {
+            EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
+                    .timestamp(now)
+                    .uri("/events" + event.getId())
+                    .app(nameService)
+                    .ip(remoteAddr)
+                    .build();
+            statClient.addStats(requestDto);
+        }
+    }
+
+    @Override
+    public void setView(Event event) {
+        String startTime = event.getCreatedOn().format(dateFormatter);
         String endTime = LocalDateTime.now().format(dateFormatter);
-        List<String> uris = events.stream()
-                .map(event -> String.format("/events/%s", event.getId()))
-                .collect(Collectors.toList());
+        List<String> uris = List.of("/events/" + event.getId());
 
-        Object responseBody = statsClient.getStatistics(startTime, endTime, uris, true).getBody();
-        if (responseBody == null) {
-            throw new IllegalArgumentException("Response body is null");
+        List<ViewStatsResponseDto> stats = getStats(startTime, endTime, uris);
+        if (stats.size() == 1) {
+            event.setViews(stats.get(0).getHits());
+        } else {
+            event.setViews(0L);
         }
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            Map<Long, Long> result = new HashMap<>();
-            List<ViewStatsResponseDto> statsResponseDtos = objectMapper.readValue(
-                    objectMapper.writeValueAsString(responseBody),
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, ViewStatsResponseDto.class)
-            );
-            statsResponseDtos.stream()
-                    .filter(viewStatsResponseDto ->
-                            !viewStatsResponseDto.getUri().equals("/events"))
-                    .forEach(viewStatsResponseDto ->
-                            result.put(Long.parseLong(viewStatsResponseDto.getUri()
-                                    .substring("/events".length() + 1)), viewStatsResponseDto.getHits()));
-            return result;
+    }
 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse ResponseEntity to List<ViewStatsResponseDto>", e);
-        }
+    @Override
+    public List<ViewStatsResponseDto> getStats(String startTime, String endTime, List<String> uris) {
+        return statClient.getStats(startTime, endTime, uris, false);
     }
 }

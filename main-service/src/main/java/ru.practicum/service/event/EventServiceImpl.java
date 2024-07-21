@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.entity.Category;
 import ru.practicum.entity.Event;
@@ -304,12 +305,9 @@ public class EventServiceImpl implements EventService {
         };
         List<Event> events = eventRepository.findAll(specification, pageRequest).stream()
                 .collect(Collectors.toList());
-        statsService.sendStat(request);
-        Map<Long, Long> views = statsService.getView(events);
-        events = events.stream().peek(event -> event.setViews(views.getOrDefault(event.getId(), 0L)))
-                .peek(event -> event.setConfirmedRequests(getConfirmedRequests(event.getId())))
-                .collect(Collectors.toList());
-        eventRepository.saveAll(events);
+        log.info("MAIN SERVICE LOG: event list formed");
+        setView(events);
+        statsService.sendStat(events, request);
         return eventMapper.toEventShortDtoList(events);
     }
 
@@ -318,16 +316,32 @@ public class EventServiceImpl implements EventService {
         log.info("MAIN SERVICE LOG: get event id " + id);
         Event event = eventRepository.findByIdAndPublishedOnIsNotNull(id)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
-        statsService.sendStat(request);
-        Map<Long, Long> views = statsService.getView(List.of(event));
-        event.setViews(views.getOrDefault(event.getId(), 0L));
-        event.setConfirmedRequests(getConfirmedRequests(event.getId()));
-        eventRepository.save(event);
+        statsService.setView(event);
+        statsService.sendStat(event, request);
         log.info("MAIN SERVICE LOG: event id " + id + " found");
         return eventMapper.toEventFullDto(event);
     }
 
-    private Long getConfirmedRequests(Long eventId) {
-       return eventRepository.getConfirmedRequests(eventId);
+    public void setView(List<Event> events) {
+        LocalDateTime start = events.get(0).getCreatedOn();
+        List<String> uris = new ArrayList<>();
+        Map<String, Event> eventsUri = new HashMap<>();
+        String uri = "";
+        for (Event event : events) {
+            if (start.isBefore(event.getCreatedOn())) {
+                start = event.getCreatedOn();
+            }
+            uri = "/events/" + event.getId();
+            uris.add(uri);
+            eventsUri.put(uri, event);
+            event.setViews(0L);
+        }
+
+        String startTime = start.format(dateFormatter);
+        String endTime = LocalDateTime.now().format(dateFormatter);
+
+        List<ViewStatsResponseDto> stats = statsService.getStats(startTime, endTime, uris);
+        stats.forEach((stat) ->
+                eventsUri.get(stat.getUri()).setViews(stat.getHits()));
     }
 }
