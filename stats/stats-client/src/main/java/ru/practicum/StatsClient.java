@@ -38,7 +38,7 @@ public class StatsClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<EndpointHitRequestDto> requestEntity = new HttpEntity<>(endpointHitDto, headers);
-        restTemplate.exchange(serverUrl + "/hit", HttpMethod.POST, requestEntity, EndpointHitRequestDto.class);
+        restTemplate.exchange(serverUrl + "/hit/", HttpMethod.POST, requestEntity, EndpointHitRequestDto.class);
     }
 
     public List<ViewStatsResponseDto> getStats(String start, String end, List<String> uris, Boolean unique) {
