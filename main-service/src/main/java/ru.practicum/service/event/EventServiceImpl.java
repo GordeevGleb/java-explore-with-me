@@ -318,7 +318,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
         statsService.sendStat(request);
         Map<Long, Long> views = statsService.getView(List.of(event));
-        event.setViews(views.getOrDefault(event.getId(), 0L) + 1);
+        event.setViews(views.getOrDefault(event.getId(), 0L));
         log.info("MAIN SERVICE LOG: event id " + id + " found");
         return eventMapper.toEventFullDto(event);
     }
