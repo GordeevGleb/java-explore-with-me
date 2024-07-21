@@ -52,6 +52,7 @@ public class StatsServiceImpl implements StatsService {
                     .toListViewStatsResponseDto(statsRepository.findUnique(startTime,endTime)) :
                     statsMapper.toListViewStatsResponseDto(statsRepository.findAll(startTime, endTime));
         }
+        log.info("params: start " + start + " end " + end + " uris " + uris + " unique " + unique);
         log.info("STATS SERVER LOG: stats list formed");
         return resultList;
     }

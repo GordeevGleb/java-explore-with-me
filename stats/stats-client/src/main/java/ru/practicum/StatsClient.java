@@ -2,6 +2,7 @@ package ru.practicum;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class StatsClient {
     private final String serverUrl;
     private final RestTemplate restTemplate;
@@ -47,7 +49,7 @@ public class StatsClient {
         parameters.put("end", end);
         parameters.put("uris", uris);
         parameters.put("unique", unique);
-
+log.info("params: start " + start + " end " + end + " uris " + uris + "unique " + unique);
         ResponseEntity<String> response = restTemplate.getForEntity(
                 serverUrl + "/stats?start={start}&end={end}&uris={uris}&unique={unique}",
                 String.class, parameters);

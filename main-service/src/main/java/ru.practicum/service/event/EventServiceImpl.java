@@ -313,9 +313,11 @@ public class EventServiceImpl implements EventService {
         log.info("MAIN SERVICE LOG: get event id " + id);
         Event event = eventRepository.findByIdAndPublishedOnIsNotNull(id)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
-        setView(List.of(event));
+        log.info("eventViews before setting: " + event.getId() + " " + event.getViews());
+        statsService.setView(event);
+        log.info("request : " + request.getRequestURI());
         statsService.sendStat(event, request);
-        log.info("MAIN SERVICE LOG: event id " + id + " found");
+        log.info("MAIN SERVICE LOG: event id " + id + " found; views: " + event.getViews());
         return eventMapper.toEventFullDto(event);
     }
 

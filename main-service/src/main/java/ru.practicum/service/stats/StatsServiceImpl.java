@@ -1,6 +1,7 @@
 package ru.practicum.service.stats;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.EndpointHitRequestDto;
 import ru.practicum.StatsClient;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StatsServiceImpl implements StatsService {
 
     private final StatsClient statClient;
@@ -27,10 +29,11 @@ public class StatsServiceImpl implements StatsService {
 
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
                 .timestamp(now.format(dateFormatter))
-                .uri("/events")
+                .uri("/events/")
                 .app(nameService)
                 .ip(remoteAddr)
                 .build();
+        log.info("endpoint: " + requestDto.toString());
         statClient.addStats(requestDto);
         sendStatForTheEvent(event.getId(), remoteAddr, now, nameService);
     }
@@ -43,7 +46,7 @@ public class StatsServiceImpl implements StatsService {
 
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
                 .timestamp(now.format(dateFormatter))
-                .uri("/events")
+                .uri("/events/")
                 .app(nameService)
                 .ip(remoteAddr)
                 .build();
@@ -56,10 +59,11 @@ public class StatsServiceImpl implements StatsService {
                                     String nameService) {
         EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
                 .timestamp(now.format(dateFormatter))
-                .uri("/events" + eventId)
+                .uri("/events/" + eventId)
                 .app(nameService)
                 .ip(remoteAddr)
                 .build();
+        log.info("endpoint: " + requestDto.toString());
         statClient.addStats(requestDto);
     }
 
@@ -69,7 +73,7 @@ public class StatsServiceImpl implements StatsService {
         for (Event event : events) {
             EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
                     .timestamp(now.format(dateFormatter))
-                    .uri("/events" + event.getId())
+                    .uri("/events/" + event.getId())
                     .app(nameService)
                     .ip(remoteAddr)
                     .build();
@@ -79,15 +83,19 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public void setView(Event event) {
+        log.info("set views for event " + event.getId() + " " + event.getViews());
         String startTime = event.getCreatedOn().format(dateFormatter);
         String endTime = LocalDateTime.now().format(dateFormatter);
         List<String> uris = List.of("/events/" + event.getId());
-
+log.info("uris: " + String.valueOf(uris));
         List<ViewStatsResponseDto> stats = getStats(startTime, endTime, uris);
-        if (stats.size() == 1) {
+        log.info("stats size: " + stats.size());
+        if (stats.size() > 0) {
+            log.info("stats.size == 1");
             event.setViews(stats.get(0).getHits());
         } else {
-            event.setViews(0L);
+            log.info("stats size < 1");
+            event.setViews(1L);
         }
     }
 
