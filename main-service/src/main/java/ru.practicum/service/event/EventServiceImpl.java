@@ -307,7 +307,9 @@ public class EventServiceImpl implements EventService {
         statsService.sendStat(request);
         Map<Long, Long> views = statsService.getView(events);
         events = events.stream().peek(event -> event.setViews(views.getOrDefault(event.getId(), 0L)))
+                .peek(event -> event.setConfirmedRequests(getConfirmedRequests(event.getId())))
                 .collect(Collectors.toList());
+        eventRepository.saveAll(events);
         return eventMapper.toEventShortDtoList(events);
     }
 
@@ -319,7 +321,13 @@ public class EventServiceImpl implements EventService {
         statsService.sendStat(request);
         Map<Long, Long> views = statsService.getView(List.of(event));
         event.setViews(views.getOrDefault(event.getId(), 0L));
+        event.setConfirmedRequests(getConfirmedRequests(event.getId()));
+        eventRepository.save(event);
         log.info("MAIN SERVICE LOG: event id " + id + " found");
         return eventMapper.toEventFullDto(event);
+    }
+
+    private Long getConfirmedRequests(Long eventId) {
+       return eventRepository.getConfirmedRequests(eventId);
     }
 }
