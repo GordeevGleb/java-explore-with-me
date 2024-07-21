@@ -101,6 +101,6 @@ log.info("uris: " + String.valueOf(uris));
 
     @Override
     public List<ViewStatsResponseDto> getStats(String startTime, String endTime, List<String> uris) {
-        return statClient.getStats(startTime, endTime, uris, false);
+        return statClient.getStats(startTime, endTime, uris, true);
     }
 }
