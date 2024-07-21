@@ -6,7 +6,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.entity.Category;
 import ru.practicum.entity.Event;
