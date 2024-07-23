@@ -303,8 +303,8 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findAll(specification, pageRequest).stream()
                 .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: event list formed");
-        setView(events);
         statsService.sendStat(events, request);
+        setView(events);
         return eventMapper.toEventShortDtoList(events);
     }
 
@@ -313,10 +313,9 @@ public class EventServiceImpl implements EventService {
         log.info("MAIN SERVICE LOG: get event id " + id);
         Event event = eventRepository.findByIdAndPublishedOnIsNotNull(id)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
-        log.info("eventViews before setting: " + event.getId() + " " + event.getViews());
-        statsService.setView(event);
         log.info("request : " + request.getRequestURI());
         statsService.sendStat(event, request);
+        setView(List.of(event));
         log.info("MAIN SERVICE LOG: event id " + id + " found; views: " + event.getViews());
         return eventMapper.toEventFullDto(event);
     }
@@ -341,5 +340,6 @@ public class EventServiceImpl implements EventService {
 
         List<ViewStatsResponseDto> stats = statsService.getStats(startTime, endTime, uris);
         stats.forEach(stat -> eventsUri.get(stat.getUri()).setViews(stat.getHits()));
+
     }
 }
