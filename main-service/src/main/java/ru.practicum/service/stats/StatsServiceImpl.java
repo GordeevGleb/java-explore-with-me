@@ -18,7 +18,7 @@ import java.util.List;
 @Slf4j
 public class StatsServiceImpl implements StatsService {
 
-    private final StatsClient statClient;
+    private final StatsClient statsClient;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
@@ -34,7 +34,7 @@ public class StatsServiceImpl implements StatsService {
                 .ip(remoteAddr)
                 .build();
         log.info("endpoint: " + requestDto.toString());
-        statClient.addStats(requestDto);
+        statsClient.addStats(requestDto);
         sendStatForTheEvent(event.getId(), remoteAddr, now, nameService);
     }
 
@@ -50,7 +50,7 @@ public class StatsServiceImpl implements StatsService {
                 .app(nameService)
                 .ip(remoteAddr)
                 .build();
-        statClient.addStats(requestDto);
+        statsClient.addStats(requestDto);
         sendStatForEveryEvent(events, remoteAddr, LocalDateTime.now(), nameService);
     }
 
@@ -64,7 +64,7 @@ public class StatsServiceImpl implements StatsService {
                 .ip(remoteAddr)
                 .build();
         log.info("endpoint: " + requestDto.toString());
-        statClient.addStats(requestDto);
+        statsClient.addStats(requestDto);
     }
 
     @Override
@@ -77,30 +77,26 @@ public class StatsServiceImpl implements StatsService {
                     .app(nameService)
                     .ip(remoteAddr)
                     .build();
-            statClient.addStats(requestDto);
+            statsClient.addStats(requestDto);
         }
     }
 
     @Override
     public void setView(Event event) {
-        log.info("set views for event " + event.getId() + " " + event.getViews());
+        log.info("set views for event " + event.getId());
         String startTime = event.getCreatedOn().format(dateFormatter);
         String endTime = LocalDateTime.now().format(dateFormatter);
         List<String> uris = List.of("/events/" + event.getId());
-log.info("uris: " + String.valueOf(uris));
         List<ViewStatsResponseDto> stats = getStats(startTime, endTime, uris);
-        log.info("stats size: " + stats.size());
         if (stats.size() > 0) {
-            log.info("stats.size == 1");
             event.setViews(stats.get(0).getHits());
         } else {
-            log.info("stats size < 1");
-            event.setViews(1L);
+            event.setViews(0L);
         }
     }
 
     @Override
     public List<ViewStatsResponseDto> getStats(String startTime, String endTime, List<String> uris) {
-        return statClient.getStats(startTime, endTime, uris, true);
+        return statsClient.getStats(startTime, endTime, uris, false);
     }
 }
