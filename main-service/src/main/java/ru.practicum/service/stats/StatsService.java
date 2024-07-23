@@ -4,7 +4,6 @@ import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.Event;
 
 import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface StatsService {
