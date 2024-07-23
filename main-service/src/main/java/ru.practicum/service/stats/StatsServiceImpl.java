@@ -7,15 +7,10 @@ import ru.practicum.EndpointHitRequestDto;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.Event;
-import ru.practicum.exception.NotFoundException;
-
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
