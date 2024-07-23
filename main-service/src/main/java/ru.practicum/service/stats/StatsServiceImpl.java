@@ -31,6 +31,7 @@ public class StatsServiceImpl implements StatsService {
                 .app(nameService)
                 .ip(request.getRemoteAddr())
                 .build();
+        log.info("requestDto: " + requestDto.toString());
         statsClient.addStats(requestDto);
     }
 
@@ -49,6 +50,6 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<ViewStatsResponseDto> getStats(String startTime, String endTime, List<String> uris) {
-        return statsClient.getStats(startTime, endTime, uris, false);
+        return statsClient.getStats(startTime, endTime, uris, true);
     }
 }

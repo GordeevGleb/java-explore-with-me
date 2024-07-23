@@ -304,7 +304,7 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: event list formed");
         statsService.sendStat(events, request);
-        setView(events);
+        events = setView(events);
         return eventMapper.toEventShortDtoList(events);
     }
 
@@ -315,31 +315,37 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
         log.info("request : " + request.getRequestURI());
         statsService.sendStat(event, request);
-        setView(List.of(event));
+        event = setView(List.of(event)).get(0);
         log.info("MAIN SERVICE LOG: event id " + id + " found; views: " + event.getViews());
         return eventMapper.toEventFullDto(event);
     }
 
-    public void setView(List<Event> events) {
-        LocalDateTime start = events.get(0).getCreatedOn();
-        List<String> uris = new ArrayList<>();
-        Map<String, Event> eventsUri = new HashMap<>();
-        String uri = "";
-        for (Event event : events) {
-            if (start.isBefore(event.getCreatedOn())) {
-                start = event.getCreatedOn();
-            }
-            uri = "/events/" + event.getId();
-            uris.add(uri);
-            eventsUri.put(uri, event);
-            event.setViews(0L);
-        }
+    public List<Event> setView(List<Event> events) {
+        String start = events.stream()
+                .map(Event::getCreatedOn)
+                .min(LocalDateTime::compareTo)
+                .orElseThrow(() -> new NotFoundException("date time exception"))
+                .format(dateFormatter);
 
-        String startTime = start.format(dateFormatter);
         String endTime = LocalDateTime.now().format(dateFormatter);
 
-        List<ViewStatsResponseDto> stats = statsService.getStats(startTime, endTime, uris);
-        stats.forEach(stat -> eventsUri.get(stat.getUri()).setViews(stat.getHits()));
+        List<String> uris = events.stream()
+                .map(event -> String.format("/events/%s", event.getId()))
+                .collect(Collectors.toList());
 
+        List<ViewStatsResponseDto> viewStatsResponseDtos = statsService.getStats(start, endTime, uris);
+        Map<Long, Long> eventHits = new HashMap<>();
+
+        for (ViewStatsResponseDto viewStatsResponseDto : viewStatsResponseDtos) {
+            if (viewStatsResponseDto.getUri().equals("/events/")) {
+                continue;
+            }
+            Long eventId = Long.parseLong(viewStatsResponseDto.getUri().substring("/events/".length() + 1));
+            eventHits.put(eventId, viewStatsResponseDto.getHits());
+        }
+        events = events.stream()
+                .peek(event ->
+                        event.setViews(eventHits.getOrDefault(event.getId(), 1L))).collect(Collectors.toList());
+        return events;
     }
 }
