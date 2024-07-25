@@ -16,6 +16,7 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @Builder
 public class Category {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
