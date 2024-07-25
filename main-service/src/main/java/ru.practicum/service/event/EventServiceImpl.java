@@ -255,6 +255,7 @@ public class EventServiceImpl implements EventService {
                 event.setConfirmedRequestCount(0L);
             }
         });
+        events = setView(events);
         log.info("MAIN SERVICE LOG: event list formed");
         return eventMapper.toEventFullDtoList(events);
     }
