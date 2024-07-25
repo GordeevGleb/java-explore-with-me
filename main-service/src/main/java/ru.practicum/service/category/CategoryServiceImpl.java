@@ -14,6 +14,7 @@ import ru.practicum.mapper.CategoryMapper;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
@@ -27,6 +28,7 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     @Override
+    @Transactional
     public CategoryDto create(NewCategoryDto newCategoryDto) {
         log.info("MAIN SERVICE LOG: creating category " + newCategoryDto.getName());
         if (categoryRepository.existsByName(newCategoryDto.getName())) {
@@ -41,6 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryDto> get(Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get categories");
         PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
@@ -50,6 +53,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CategoryDto getById(Long id) {
         log.info("MAIN SERVICE LOG: get category by id " + id);
         Category category = categoryRepository.findById(id)
@@ -59,6 +63,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         log.info("MAIN SERVICE LOG: removing category id " + id);
         Category actual = categoryRepository.findById(id)
@@ -71,6 +76,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CategoryDto update(Long id, NewCategoryDto newCategoryDto) {
         log.info("MAIN SERVICE LOG: updating category id " + id);
         Category actual = categoryRepository.findById(id)

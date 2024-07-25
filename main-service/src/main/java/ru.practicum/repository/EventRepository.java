@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import ru.practicum.dto.event.EventShortDto;
+import ru.practicum.entity.Compilation;
 import ru.practicum.entity.Event;
 
 import java.util.List;
@@ -23,6 +25,4 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
 
     Optional<Event> findByIdAndPublishedOnIsNotNull(Long id);
 
-    @Query("SELECT COUNT(r.id) FROM Request r WHERE r.event.id = :eventId and r.status = 'CONFIRMED'")
-    Long getConfirmedRequests(Long eventId);
 }

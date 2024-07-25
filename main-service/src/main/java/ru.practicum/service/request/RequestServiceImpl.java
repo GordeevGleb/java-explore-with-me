@@ -16,7 +16,7 @@ import ru.practicum.mapper.RequestMapper;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.RequestRepository;
 import ru.practicum.repository.UserRepository;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +32,7 @@ public class RequestServiceImpl implements RequestService {
     private final RequestMapper requestMapper;
 
     @Override
+    @Transactional
     public ParticipationRequestDto create(Long userId, Long eventId) {
         log.info("MAIN SERVICE LOG: creating request");
         User user = userRepository.findById(userId)
@@ -53,8 +54,8 @@ public class RequestServiceImpl implements RequestService {
         }
         Request actual = Request.builder()
                 .created(LocalDateTime.now())
-                .event(eventId)
-                .requester(userId)
+                .event(event)
+                .requester(user)
                 .status(RequestStatus.PENDING)
                 .build();
         if (event.getRequestModeration().equals(Boolean.FALSE) || event.getParticipantLimit() == 0) {
@@ -67,6 +68,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
         log.info("MAIN SERVICE LOG: getting user's event request list");
         Event event = eventRepository.findById(eventId)
@@ -80,6 +82,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public EventRequestStatusUpdateResult updateRequests(Long userId,
                                                          Long eventId,
                                                          EventRequestStatusUpdateRequest
@@ -103,15 +106,15 @@ public class RequestServiceImpl implements RequestService {
                 requestRepository.countByEventAndStatusIs(eventId, RequestStatus.CONFIRMED) >= event.getParticipantLimit()) {
             throw new WrongRequestException("The participant limit has been reached");
         }
-        if (Optional.ofNullable(event.getConfirmedRequests()).isEmpty()) {
-            event.setConfirmedRequests(0L);
+        if (Optional.ofNullable(event.getConfirmedRequestCount()).isEmpty()) {
+            event.setConfirmedRequestCount(0L);
         }
         if (RequestStatus.CONFIRMED.equals(eventRequestStatusUpdateRequest.getStatus())) {
             requests.stream().forEach(request -> {
-                if (event.getConfirmedRequests() < event.getParticipantLimit()) {
+                if (event.getConfirmedRequestCount() < event.getParticipantLimit()) {
                     request.setStatus(RequestStatus.CONFIRMED);
-                    event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-                } else if (event.getConfirmedRequests() >= event.getParticipantLimit()) {
+                    event.setConfirmedRequestCount(event.getConfirmedRequestCount() + 1);
+                } else if (event.getConfirmedRequestCount() >= event.getParticipantLimit()) {
                     request.setStatus(RequestStatus.REJECTED);
                 }
             });
@@ -133,6 +136,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getUserRequests(Long id) {
         log.info("MAIN SERVICE LOG: getting user id " + id + " request list");
         User user = userRepository.findById(id)
@@ -143,6 +147,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         log.info("MAIN SERVICE LOG: user id " + userId + " cancel request id " + requestId);
         Request request = requestRepository.findById(requestId)

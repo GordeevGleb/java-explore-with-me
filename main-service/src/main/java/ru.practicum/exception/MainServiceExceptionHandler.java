@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.entity.ApiError;
+import ru.practicum.enums.ApiErrorStatus;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -20,22 +21,22 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleConcurrentUserNameException(final ConcurrentNameException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status(ApiErrorStatus.CONFLICT)
                 .reason("Integrity constraint has been violated.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
-@ExceptionHandler
-@ResponseStatus(HttpStatus.NOT_FOUND)
-@ResponseBody
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
     public ApiError handleNotFoundException(final NotFoundException e) {
         return ApiError.builder()
-                .status("NOT_FOUND")
+                .status(ApiErrorStatus.NOT_FOUND)
                 .reason("The required object was not found.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
 
     }
@@ -45,10 +46,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleDateTimeException(final DateTimeException e) {
         return ApiError.builder()
-                .status("BAD_REQUEST")
+                .status(ApiErrorStatus.BAD_REQUEST)
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -57,10 +58,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleIntegrityConflictException(final IntegrityConflictException e) {
         return ApiError.builder()
-                .status("BAD_REQUEST")
+                .status(ApiErrorStatus.BAD_REQUEST)
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -69,10 +70,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleUserRequestAlreadyExistException(final UserRequestAlreadyExistException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status(ApiErrorStatus.CONFLICT)
                 .reason("Integrity constraint has been violated.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -81,10 +82,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleLimitException(final LimitException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status(ApiErrorStatus.CONFLICT)
                 .reason("Integrity constraint has been violated.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -93,10 +94,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleEventStatusException(final EventStatusException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status(ApiErrorStatus.CONFLICT)
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -105,10 +106,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleWrongRequestException(final WrongRequestException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status(ApiErrorStatus.CONFLICT)
                 .reason("Incorrectly made request.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -117,10 +118,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleRequestStatusException(final RequestStatusException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status(ApiErrorStatus.CONFLICT)
                 .reason("Incorrectly made request.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -129,10 +130,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleWrongInputException(final WrongInputException e) {
         return ApiError.builder()
-                .status("BAD_REQUEST")
+                .status(ApiErrorStatus.BAD_REQUEST)
                 .reason("Incorrectly made request.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -141,10 +142,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleEventDateTimeException(final EventDateTimeException e) {
         return ApiError.builder()
-                .status("BAD_REQUEST")
+                .status(ApiErrorStatus.BAD_REQUEST)
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -153,10 +154,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleCategoryNotEmptyException(final CategoryNotEmptyException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status(ApiErrorStatus.CONFLICT)
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -165,10 +166,10 @@ public class MainServiceExceptionHandler {
     @ResponseBody
     public ApiError handleWrongUserRequestException(final WrongUserRequestException e) {
         return ApiError.builder()
-                .status("CONFLICT")
+                .status(ApiErrorStatus.CONFLICT)
                 .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now().format(dateTimeFormatter))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 }

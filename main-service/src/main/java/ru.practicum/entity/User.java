@@ -1,15 +1,18 @@
 package ru.practicum.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -18,8 +21,15 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
+    @NotNull
+    @Size(min = 2, max = 250)
     private String name;
 
     @Column(unique = true)
+    @NotNull
+    @NotBlank
+    @Email
+    @Size(min = 6, max = 254)
     private String email;
 }

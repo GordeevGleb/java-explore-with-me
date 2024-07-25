@@ -8,6 +8,7 @@ import ru.practicum.StatsClient;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.Event;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class StatsServiceImpl implements StatsService {
 
     private final StatsClient statsClient;

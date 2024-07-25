@@ -11,7 +11,7 @@ import ru.practicum.exception.ConcurrentNameException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.UserMapper;
 import ru.practicum.repository.UserRepository;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +25,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
+    @Transactional
     public UserDto create(NewUserRequest newUserRequest) {
         log.info("MAIN SERVICE LOG: create user; name check");
         if (userRepository.existsByName(newUserRequest.getName())) {
@@ -40,6 +41,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDto> get(List<Long> ids, Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get users list");
         PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
@@ -54,6 +56,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         log.info("MAIN SERVICE LOG: delete user id " + id);
         if (!userRepository.existsById(id)) {

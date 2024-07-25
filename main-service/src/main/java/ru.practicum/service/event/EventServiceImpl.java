@@ -24,6 +24,7 @@ import ru.practicum.service.stats.StatsService;
 
 import javax.persistence.criteria.Predicate;
 import javax.servlet.http.HttpServletRequest;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -44,6 +45,7 @@ public class EventServiceImpl implements EventService {
 
 
     @Override
+    @Transactional
     public EventFullDto create(Long userId, NewEventDto newEventDto) {
         log.info("MAIN SERVICE LOG: user id " + userId + " creating event");
         Category category = categoryRepository.findById(newEventDto.getCategory())
@@ -67,6 +69,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> getUserEvents(Long userId, Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get user's events");
         PageRequest pageRequest = PageRequest.of(from / size, size);
@@ -76,6 +79,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto updateByAdmin(Long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
@@ -153,6 +157,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto updateByUser(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
         log.info("MAIN SERICE LOG: user id " + userId + " updating event id " + eventId);
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
@@ -208,6 +213,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getByIdUser(Long userId, Long eventId) {
         log.info("MAIN SERVICE LOG: getting event id " + eventId + " by user id " + userId);
         Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId)
@@ -217,6 +223,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventFullDto> getWithParamsAdmin(List<Long> users, List<EventState> states, List<Long> categoriesId,
                                                      LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                  Integer from, Integer size) {
@@ -244,8 +251,8 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findAll(specification, page).stream()
                 .collect(Collectors.toList());
         events.stream().forEach(event -> {
-            if (Optional.ofNullable(event.getConfirmedRequests()).isEmpty()) {
-                event.setConfirmedRequests(0L);
+            if (Optional.ofNullable(event.getConfirmedRequestCount()).isEmpty()) {
+                event.setConfirmedRequestCount(0L);
             }
         });
         log.info("MAIN SERVICE LOG: event list formed");
@@ -253,6 +260,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventShortDto> getWithParams(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
                                                LocalDateTime rangeEnd, Boolean onlyAvailable, SortFormat sort,
                                                Integer from, Integer size, HttpServletRequest request) {
@@ -309,6 +317,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EventFullDto getByIdPublic(Long id, HttpServletRequest request) {
         log.info("MAIN SERVICE LOG: get event id " + id);
         Event event = eventRepository.findByIdAndPublishedOnIsNotNull(id)
@@ -316,7 +325,7 @@ public class EventServiceImpl implements EventService {
         log.info("request : " + request.getRequestURI());
         statsService.sendStat(event, request);
         event = setView(List.of(event)).get(0);
-        log.info("MAIN SERVICE LOG: event id " + id + " found; views: " + event.getViews());
+        log.info("MAIN SERVICE LOG: event id " + id + " found; views: " + event.getViewCount());
         return eventMapper.toEventFullDto(event);
     }
 
@@ -345,7 +354,7 @@ public class EventServiceImpl implements EventService {
         }
         events = events.stream()
                 .peek(event ->
-                        event.setViews(eventHits.getOrDefault(event.getId(), 1L))).collect(Collectors.toList());
+                        event.setViewCount(eventHits.getOrDefault(event.getId(), 1L))).collect(Collectors.toList());
         return events;
     }
 }
