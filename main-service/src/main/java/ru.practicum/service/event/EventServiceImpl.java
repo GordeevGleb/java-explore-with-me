@@ -274,7 +274,7 @@ public class EventServiceImpl implements EventService {
         } else if (sort.equals(SortFormat.EVENT_DATE)) {
             pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("eventDate"));
         } else {
-            pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("views"));
+            pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("viewCount"));
         }
         if (rangeStart != null && rangeEnd != null) {
             if (rangeEnd.isBefore(rangeStart) || rangeStart.equals(rangeEnd)) {
