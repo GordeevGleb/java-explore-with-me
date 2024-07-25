@@ -21,12 +21,10 @@ public class Request {
 
     private LocalDateTime created;
 
-    @Column(name = "event", unique = true)
     @ManyToOne
     @JoinColumn(name = "event", referencedColumnName = "id")
     private Event event;
 
-    @Column(name = "requester", unique = true)
     @ManyToOne
     @JoinColumn(name = "requester", referencedColumnName = "id")
     private User requester;
