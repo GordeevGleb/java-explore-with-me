@@ -15,7 +15,6 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface EventMapper {
-    EventFullDto toEventFullDto(Event event);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", source = "category")
@@ -31,5 +30,7 @@ public interface EventMapper {
 
     List<EventShortDto> toEventShortDtoList(List<Event> events);
 
-    List<EventFullDto> toEventFullDtoList(List<Event> events);
+    @Mapping(target = "confirmedRequests", source = "event.confirmedRequestCount")
+    @Mapping(target = "views", source = "event.viewCount")
+    EventFullDto toEventFullDto(Event event);
 }

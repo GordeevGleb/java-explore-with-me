@@ -250,14 +250,16 @@ public class EventServiceImpl implements EventService {
         };
         List<Event> events = eventRepository.findAll(specification, page).stream()
                 .collect(Collectors.toList());
-        events.stream().forEach(event -> {
+        events = events.stream().peek(event -> {
             if (Optional.ofNullable(event.getConfirmedRequestCount()).isEmpty()) {
                 event.setConfirmedRequestCount(0L);
             }
-        });
+        }).collect(Collectors.toList());
         events = setView(events);
+        List<EventFullDto> eventFullDtos = events.stream()
+                .map(event -> eventMapper.toEventFullDto(event)).collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: event list formed");
-        return eventMapper.toEventFullDtoList(events);
+        return eventFullDtos;
     }
 
     @Override

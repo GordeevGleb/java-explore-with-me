@@ -39,7 +39,7 @@ public class RequestServiceImpl implements RequestService {
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
-        if (requestRepository.existsByRequesterAndEvent(userId, eventId)) {
+        if (requestRepository.existsByRequesterIdAndEventId(userId, eventId)) {
             throw new UserRequestAlreadyExistException("Request already exists.");
         }
         if (event.getInitiator().getId().equals(userId)) {
@@ -49,7 +49,7 @@ public class RequestServiceImpl implements RequestService {
             throw new EventStatusException("Event was not published");
         }
         if (event.getParticipantLimit() != 0 &&
-                requestRepository.countByEventAndStatusIs(eventId, RequestStatus.CONFIRMED) >= event.getParticipantLimit()) {
+                requestRepository.countByEventIdAndStatusIs(eventId, RequestStatus.CONFIRMED) >= event.getParticipantLimit()) {
             throw new LimitException("Request limit has been reached");
         }
         Request actual = Request.builder()
@@ -76,7 +76,7 @@ public class RequestServiceImpl implements RequestService {
         if (!event.getInitiator().getId().equals(userId)) {
             throw new WrongRequestException("User must be event initiator");
         }
-        List<Request> requests = requestRepository.findAllByEvent(eventId);
+        List<Request> requests = requestRepository.findAllByEventId(eventId);
         log.info("MAIN SERVICE LOG: user's event request list formed");
         return requestMapper.toParticipationRequestDtoList(requests);
     }
@@ -94,7 +94,7 @@ public class RequestServiceImpl implements RequestService {
             throw new RequestStatusException("Field request id's shall not be blank");
         }
         List<Request> requests = requestRepository
-                .findAllByEventAndIdIn(eventId, eventRequestStatusUpdateRequest.getRequestIds());
+                .findAllByEventIdAndIdIn(eventId, eventRequestStatusUpdateRequest.getRequestIds());
         EventRequestStatusUpdateResult result = new EventRequestStatusUpdateResult();
         if (event.getParticipantLimit() == 0 || event.getRequestModeration().equals(Boolean.FALSE)) {
             return result;
@@ -103,7 +103,7 @@ public class RequestServiceImpl implements RequestService {
             throw new RequestStatusException("Request must have status PENDING");
         }
         if (event.getParticipantLimit() != 0 &&
-                requestRepository.countByEventAndStatusIs(eventId, RequestStatus.CONFIRMED) >= event.getParticipantLimit()) {
+                requestRepository.countByEventIdAndStatusIs(eventId, RequestStatus.CONFIRMED) >= event.getParticipantLimit()) {
             throw new WrongRequestException("The participant limit has been reached");
         }
         if (Optional.ofNullable(event.getConfirmedRequestCount()).isEmpty()) {
@@ -141,7 +141,7 @@ public class RequestServiceImpl implements RequestService {
         log.info("MAIN SERVICE LOG: getting user id " + id + " request list");
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User with id=" + id + " was not found"));
-        List<Request> userRequests = requestRepository.findAllByRequester(id);
+        List<Request> userRequests = requestRepository.findAllByRequesterId(id);
         log.info("MAIN SERVICE LOG: user request list formed");
         return requestMapper.toParticipationRequestDtoList(userRequests);
     }

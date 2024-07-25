@@ -45,7 +45,7 @@ public class CompilationServiceImpl implements CompilationService {
             actual.setPinned(Boolean.FALSE);
         }
         actual = compilationRepository.save(actual);
-        List<EventShortDto> compilationEvents = eventMapper.toEventShortDtoList((List<Event>) actual.getEvents());
+        List<EventShortDto> compilationEvents = eventMapper.toEventShortDtoList(actual.getEvents());
         CompilationDto savedCompilation = compilationMapper.toCompilationDto(actual, compilationEvents);
         log.info("MAIN SERVICE LOG: compilation created");
         return savedCompilation;
@@ -57,7 +57,7 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("MAIN SERVICE LOG: get compilation id " + id);
         Compilation compilation = compilationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
-        List<EventShortDto> compilationEvents = eventMapper.toEventShortDtoList((List<Event>) compilation.getEvents());
+        List<EventShortDto> compilationEvents = eventMapper.toEventShortDtoList(compilation.getEvents());
         log.info("MAIN SERVICE LOG: compilation id " + id + " found");
         return compilationMapper.toCompilationDto(compilation, compilationEvents);
     }
@@ -72,7 +72,7 @@ public class CompilationServiceImpl implements CompilationService {
             List<Compilation> compilations = compilationRepository.findByPinned(pageRequest, pinned);
             for (Compilation compilation : compilations) {
                 List<EventShortDto> eventShortDtos = eventMapper
-                        .toEventShortDtoList((List<Event>) compilation.getEvents());
+                        .toEventShortDtoList(compilation.getEvents());
                  resultList.add(compilationMapper.toCompilationDto(compilation, eventShortDtos));
             }
             log.info("MAIN SERVICE LOG: pinned compilation list formed");
@@ -81,7 +81,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<Compilation> compilations = compilationRepository.findAll(pageRequest).toList();
         for (Compilation compilation : compilations) {
             List<EventShortDto> eventShortDtos = eventMapper
-                    .toEventShortDtoList((List<Event>) compilation.getEvents());
+                    .toEventShortDtoList(compilation.getEvents());
             resultList.add(compilationMapper.toCompilationDto(compilation, eventShortDtos));
         }
         log.info("MAIN SERVICE LOG: compilation list formed");
@@ -106,7 +106,7 @@ public class CompilationServiceImpl implements CompilationService {
                 .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
         if (updateCompilationRequest.getEvents() != null) {
             List<Event> events = eventRepository.findAllByIdIn(updateCompilationRequest.getEvents());
-            actual.setEvents(new HashSet<>(events));
+            actual.setEvents(new ArrayList<>(events));
         }
         if (updateCompilationRequest.getPinned() != null) {
             actual.setPinned(updateCompilationRequest.getPinned());
@@ -115,7 +115,7 @@ public class CompilationServiceImpl implements CompilationService {
             actual.setTitle(updateCompilationRequest.getTitle());
         }
         actual = compilationRepository.save(actual);
-        List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList((List<Event>) actual.getEvents());
+        List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(actual.getEvents());
         log.info("MAIN SERVICE LOG: compilation id " + id + " updated");
         return compilationMapper.toCompilationDto(actual, eventShortDtos);
     }
