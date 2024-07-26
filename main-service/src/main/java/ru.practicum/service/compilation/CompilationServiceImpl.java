@@ -17,8 +17,6 @@ import ru.practicum.repository.CompilationRepository;
 import ru.practicum.repository.EventRepository;
 
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityManager;
 import java.util.*;
 
 @Service
@@ -30,8 +28,6 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final CompilationMapper compilationMapper;
     private final EventMapper eventMapper;
-
-    private final EntityManager entityManager;
 
     @Override
     @Transactional
