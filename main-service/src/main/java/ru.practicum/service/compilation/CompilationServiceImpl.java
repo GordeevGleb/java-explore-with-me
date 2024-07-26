@@ -18,6 +18,7 @@ import ru.practicum.repository.EventRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.util.*;
 
 @Service
@@ -29,6 +30,8 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final CompilationMapper compilationMapper;
     private final EventMapper eventMapper;
+
+    private final EntityManager entityManager;
 
     @Override
     @Transactional
@@ -68,21 +71,22 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("MAIN SERVICE LOG: get compilations");
         PageRequest pageRequest = PageRequest.of(from / size, size);
         List<CompilationDto> resultList = new ArrayList<>();
+        Map<Long, List<Event>> compEventMap = new HashMap<>();
         if (Optional.ofNullable(pinned).isPresent() && pinned.equals(Boolean.TRUE)) {
-            List<Compilation> compilations = compilationRepository.findByPinned(pageRequest, pinned);
+            List<Compilation> compilations = compilationRepository.findAllPinnedWithEvents(pageRequest, pinned);
             for (Compilation compilation : compilations) {
-                List<EventShortDto> eventShortDtos = eventMapper
-                        .toEventShortDtoList(compilation.getEvents());
-                 resultList.add(compilationMapper.toCompilationDto(compilation, eventShortDtos));
+                List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(compilation.getEvents());
+                CompilationDto compilationDto = compilationMapper.toCompilationDto(compilation, eventShortDtos);
+                resultList.add(compilationDto);
             }
             log.info("MAIN SERVICE LOG: pinned compilation list formed");
             return resultList;
         }
-        List<Compilation> compilations = compilationRepository.findAll(pageRequest).toList();
+        List<Compilation> compilations = compilationRepository.findAllWithEvents(pageRequest);
         for (Compilation compilation : compilations) {
-            List<EventShortDto> eventShortDtos = eventMapper
-                    .toEventShortDtoList(compilation.getEvents());
-            resultList.add(compilationMapper.toCompilationDto(compilation, eventShortDtos));
+            List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(compilation.getEvents());
+            CompilationDto compilationDto = compilationMapper.toCompilationDto(compilation, eventShortDtos);
+            resultList.add(compilationDto);
         }
         log.info("MAIN SERVICE LOG: compilation list formed");
         return resultList;
