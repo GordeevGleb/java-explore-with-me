@@ -33,4 +33,6 @@ public interface EventMapper {
     @Mapping(target = "confirmedRequests", source = "event.confirmedRequestCount")
     @Mapping(target = "views", source = "event.viewCount")
     EventFullDto toEventFullDto(Event event);
+
+    EventShortDto toEventShortDto(Event event);
 }

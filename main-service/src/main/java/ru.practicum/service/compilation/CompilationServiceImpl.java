@@ -2,7 +2,6 @@ package ru.practicum.service.compilation;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.NewCompilationDto;
@@ -17,7 +16,14 @@ import ru.practicum.repository.CompilationRepository;
 import ru.practicum.repository.EventRepository;
 
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +34,8 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final CompilationMapper compilationMapper;
     private final EventMapper eventMapper;
+
+    private final EntityManager entityManager;
 
     @Override
     @Transactional
@@ -44,7 +52,11 @@ public class CompilationServiceImpl implements CompilationService {
             actual.setPinned(Boolean.FALSE);
         }
         actual = compilationRepository.save(actual);
-        List<EventShortDto> compilationEvents = eventMapper.toEventShortDtoList(actual.getEvents());
+        List<EventShortDto> compilationEvents = actual
+                .getEvents()
+                .stream()
+                .map(eventMapper::toEventShortDto)
+                .collect(Collectors.toList());
         CompilationDto savedCompilation = compilationMapper.toCompilationDto(actual, compilationEvents);
         log.info("MAIN SERVICE LOG: compilation created");
         return savedCompilation;
@@ -56,41 +68,46 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("MAIN SERVICE LOG: get compilation id " + id);
         Compilation compilation = compilationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
-        List<EventShortDto> compilationEvents = eventMapper.toEventShortDtoList(compilation.getEvents());
+        List<EventShortDto> compilationEvents = compilation
+                .getEvents()
+                .stream()
+                .map(event -> eventMapper.toEventShortDto(event))
+                .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: compilation id " + id + " found");
         return compilationMapper.toCompilationDto(compilation, compilationEvents);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
-        log.info("MAIN SERVICE LOG: get compilations");
-        log.info("pagination params: " + from + " " + size);
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
-        List<CompilationDto> resultList = new ArrayList<>();
-        if (Optional.ofNullable(pinned).isPresent() && pinned.equals(Boolean.TRUE)) {
-            List<Compilation> compilations = compilationRepository.findAllPinnedWithEvents(page, pinned).toList();
-            log.info("complete compilation list:" + compilations);
-            for (Compilation compilation : compilations) {
-                log.info("comp. with events: " + compilation.getId() + " " + compilation.getTitle() + " " + compilation.getEvents());
-                List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(compilation.getEvents());
-                CompilationDto compilationDto = compilationMapper.toCompilationDto(compilation, eventShortDtos);
-                resultList.add(compilationDto);
-            }
-            log.info("MAIN SERVICE LOG: pinned compilation list formed");
-            return resultList;
+@Override
+public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
+    CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+    CriteriaQuery<Compilation> query = builder.createQuery(Compilation.class);
+
+    Root<Compilation> root = query.from(Compilation.class);
+    Predicate criteria = builder.conjunction();
+
+    if (pinned != null) {
+        Predicate isPinned;
+        if (pinned) {
+            isPinned = builder.isTrue(root.get("pinned"));
+        } else {
+            isPinned = builder.isFalse(root.get("pinned"));
         }
-        List<Compilation> compilations = compilationRepository.findAllWithEvents(page).toList();
-        log.info("complete compilation list:" + compilations);
-        for (Compilation compilation : compilations) {
-            log.info("comp. with events: " + compilation.getId() + " " + compilation.getTitle() + " " + compilation.getEvents());
-            List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(compilation.getEvents());
-            CompilationDto compilationDto = compilationMapper.toCompilationDto(compilation, eventShortDtos);
-            resultList.add(compilationDto);
-        }
-        log.info("MAIN SERVICE LOG: compilation list formed");
-        return resultList;
+        criteria = builder.and(criteria, isPinned);
     }
+
+    query.select(root).where(criteria);
+    List<Compilation> compilations = entityManager.createQuery(query)
+            .setFirstResult(from)
+            .setMaxResults(size)
+            .getResultList();
+    log.info("result compilation list: " + compilations);
+    List<Long> compilationIds = compilations
+            .stream()
+            .map(compilation -> compilation.getId())
+            .collect(Collectors.toList());
+
+    return compilationMapper.toListCompilationDto(compilations);
+}
 
     @Override
     @Transactional
@@ -110,7 +127,7 @@ public class CompilationServiceImpl implements CompilationService {
                 .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
         if (updateCompilationRequest.getEvents() != null) {
             List<Event> events = eventRepository.findAllByIdIn(updateCompilationRequest.getEvents());
-            actual.setEvents(new ArrayList<>(events));
+            actual.setEvents(new HashSet<>(events));
         }
         if (updateCompilationRequest.getPinned() != null) {
             actual.setPinned(updateCompilationRequest.getPinned());
@@ -119,7 +136,11 @@ public class CompilationServiceImpl implements CompilationService {
             actual.setTitle(updateCompilationRequest.getTitle());
         }
         actual = compilationRepository.save(actual);
-        List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(actual.getEvents());
+        List<EventShortDto> eventShortDtos = actual
+                .getEvents()
+                .stream()
+                .map(event -> eventMapper.toEventShortDto(event))
+                .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: compilation id " + id + " updated");
         return compilationMapper.toCompilationDto(actual, eventShortDtos);
     }
