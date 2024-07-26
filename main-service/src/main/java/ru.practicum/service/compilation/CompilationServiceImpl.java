@@ -70,6 +70,7 @@ public class CompilationServiceImpl implements CompilationService {
         if (Optional.ofNullable(pinned).isPresent() && pinned.equals(Boolean.TRUE)) {
             List<Compilation> compilations = compilationRepository.findAllPinnedWithEvents(page, pinned).getContent();
             for (Compilation compilation : compilations) {
+                log.info("comp. with events: " + compilation.getId() + " " + compilation.getTitle() + " " + compilation.getEvents());
                 List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(compilation.getEvents());
                 CompilationDto compilationDto = compilationMapper.toCompilationDto(compilation, eventShortDtos);
                 resultList.add(compilationDto);
