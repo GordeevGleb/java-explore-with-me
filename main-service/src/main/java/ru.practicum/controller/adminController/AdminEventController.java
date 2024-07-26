@@ -10,7 +10,6 @@ import ru.practicum.enums.EventState;
 import ru.practicum.service.event.EventService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
