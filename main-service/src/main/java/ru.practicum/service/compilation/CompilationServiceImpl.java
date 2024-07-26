@@ -65,6 +65,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional(readOnly = true)
     public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get compilations");
+        log.info("pagination params: " + from + " " + size);
         PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
         List<CompilationDto> resultList = new ArrayList<>();
         if (Optional.ofNullable(pinned).isPresent() && pinned.equals(Boolean.TRUE)) {

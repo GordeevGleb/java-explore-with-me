@@ -248,6 +248,7 @@ public class EventServiceImpl implements EventService {
             }
             return builder.and(predicates.toArray(new Predicate[predicates.size()]));
         };
+        log.info("pagination params: " + from + " " + size);
         List<Event> events = eventRepository.findAll(specification, page).stream()
                 .collect(Collectors.toList());
         events = events.stream().peek(event -> {
