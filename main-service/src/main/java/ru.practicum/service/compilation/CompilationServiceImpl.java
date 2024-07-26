@@ -71,7 +71,6 @@ public class CompilationServiceImpl implements CompilationService {
         log.info("MAIN SERVICE LOG: get compilations");
         PageRequest pageRequest = PageRequest.of(from / size, size);
         List<CompilationDto> resultList = new ArrayList<>();
-        Map<Long, List<Event>> compEventMap = new HashMap<>();
         if (Optional.ofNullable(pinned).isPresent() && pinned.equals(Boolean.TRUE)) {
             List<Compilation> compilations = compilationRepository.findAllPinnedWithEvents(pageRequest, pinned);
             for (Compilation compilation : compilations) {
