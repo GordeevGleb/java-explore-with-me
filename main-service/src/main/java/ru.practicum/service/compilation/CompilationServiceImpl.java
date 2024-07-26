@@ -69,7 +69,8 @@ public class CompilationServiceImpl implements CompilationService {
         PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
         List<CompilationDto> resultList = new ArrayList<>();
         if (Optional.ofNullable(pinned).isPresent() && pinned.equals(Boolean.TRUE)) {
-            List<Compilation> compilations = compilationRepository.findAllPinnedWithEvents(page, pinned).getContent();
+            List<Compilation> compilations = compilationRepository.findAllPinnedWithEvents(page, pinned).toList();
+            log.info("complete compilation list:" + compilations);
             for (Compilation compilation : compilations) {
                 log.info("comp. with events: " + compilation.getId() + " " + compilation.getTitle() + " " + compilation.getEvents());
                 List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(compilation.getEvents());
@@ -79,8 +80,10 @@ public class CompilationServiceImpl implements CompilationService {
             log.info("MAIN SERVICE LOG: pinned compilation list formed");
             return resultList;
         }
-        List<Compilation> compilations = compilationRepository.findAllWithEvents(page).getContent();
+        List<Compilation> compilations = compilationRepository.findAllWithEvents(page).toList();
+        log.info("complete compilation list:" + compilations);
         for (Compilation compilation : compilations) {
+            log.info("comp. with events: " + compilation.getId() + " " + compilation.getTitle() + " " + compilation.getEvents());
             List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(compilation.getEvents());
             CompilationDto compilationDto = compilationMapper.toCompilationDto(compilation, eventShortDtos);
             resultList.add(compilationDto);
