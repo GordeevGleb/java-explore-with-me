@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface CompilationRepository extends JpaRepository<Compilation, Long> {
-    List<Compilation> findByPinned(PageRequest pageRequest, Boolean pinned);
+
     @Query("select c FROM Compilation c join fetch c.events")
     List<Compilation> findAllWithEvents(PageRequest pageRequest);
 
