@@ -227,8 +227,8 @@ public class EventServiceImpl implements EventService {
     public List<EventFullDto> getWithParamsAdmin(List<Long> users, List<EventState> states, List<Long> categoriesId,
                                                      LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                  Integer from, Integer size) {
-        log.info("MAIN SERVICE LOG: get parametryzed event list: admin");
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+        log.info("MAIN SERVICE LOG: get parametryzed event list: admin; from {}, size {}", from, size);
+        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
         Specification<Event> specification = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (users != null && users.size() > 0) {
@@ -249,8 +249,7 @@ public class EventServiceImpl implements EventService {
             return builder.and(predicates.toArray(new Predicate[predicates.size()]));
         };
         log.info("pagination params: " + from + " " + size);
-        List<Event> events = eventRepository.findAll(specification, page).stream()
-                .collect(Collectors.toList());
+        List<Event> events = eventRepository.findAll(specification, pageRequest).toList();
         events = events.stream().peek(event -> {
             if (Optional.ofNullable(event.getConfirmedRequestCount()).isEmpty()) {
                 event.setConfirmedRequestCount(0L);
@@ -268,10 +267,11 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getWithParams(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
                                                LocalDateTime rangeEnd, Boolean onlyAvailable, SortFormat sort,
                                                Integer from, Integer size, HttpServletRequest request) {
-        log.info("MAIN SERVICE LOG: event list forming");
+        log.info("MAIN SERVICE LOG: event list forming; from {}, size {}", from, size);
         PageRequest pageRequest;
         if (Optional.ofNullable(sort).isEmpty()) {
             pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
+            log.info("from {}, size {}", from, size);
         } else if (sort.equals(SortFormat.EVENT_DATE)) {
             pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("eventDate"));
         } else {
