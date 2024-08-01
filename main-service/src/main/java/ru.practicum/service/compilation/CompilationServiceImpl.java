@@ -2,6 +2,7 @@ package ru.practicum.service.compilation;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.NewCompilationDto;
@@ -71,43 +72,38 @@ public class CompilationServiceImpl implements CompilationService {
         List<EventShortDto> compilationEvents = compilation
                 .getEvents()
                 .stream()
-                .map(event -> eventMapper.toEventShortDto(event))
+                .map(eventMapper::toEventShortDto)
                 .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: compilation id " + id + " found");
         return compilationMapper.toCompilationDto(compilation, compilationEvents);
     }
 
-@Override
-public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
-    CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-    CriteriaQuery<Compilation> query = builder.createQuery(Compilation.class);
+    @Override
+    public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
+        log.info("MAIN SERVICE LOG: getting compilation list");
+        List<CompilationDto> compilationDtos = new ArrayList<>();
+        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
 
-    Root<Compilation> root = query.from(Compilation.class);
-    Predicate criteria = builder.conjunction();
-
-    if (pinned != null) {
-        Predicate isPinned;
         if (pinned) {
-            isPinned = builder.isTrue(root.get("pinned"));
+            List<Compilation> compilations = compilationRepository
+                    .getCompilationsWithEventsPinned(pageRequest, pinned).toList();
+            for (Compilation compilation : compilations) {
+                List<Event> events = new ArrayList<>(compilation.getEvents());
+                List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(events);
+                compilationDtos.add(compilationMapper.toCompilationDto(compilation, eventShortDtos));
+            }
         } else {
-            isPinned = builder.isFalse(root.get("pinned"));
+            List<Compilation> compilations = compilationRepository
+                    .getCompilationsWithEvents(pageRequest).toList();
+            for (Compilation compilation : compilations) {
+                List<Event> events = new ArrayList<>(compilation.getEvents());
+                List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(events);
+                compilationDtos.add(compilationMapper.toCompilationDto(compilation, eventShortDtos));
+            }
         }
-        criteria = builder.and(criteria, isPinned);
+        log.info("MAIN SERVICE LOG: compilation list formed; size: {}", compilationDtos.size());
+        return compilationDtos;
     }
-
-    query.select(root).where(criteria);
-    List<Compilation> compilations = entityManager.createQuery(query)
-            .setFirstResult(from)
-            .setMaxResults(size)
-            .getResultList();
-    log.info("result compilation list: " + compilations);
-    List<Long> compilationIds = compilations
-            .stream()
-            .map(compilation -> compilation.getId())
-            .collect(Collectors.toList());
-
-    return compilationMapper.toListCompilationDto(compilations);
-}
 
     @Override
     @Transactional
@@ -139,7 +135,7 @@ public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
         List<EventShortDto> eventShortDtos = actual
                 .getEvents()
                 .stream()
-                .map(event -> eventMapper.toEventShortDto(event))
+                .map(eventMapper::toEventShortDto)
                 .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: compilation id " + id + " updated");
         return compilationMapper.toCompilationDto(actual, eventShortDtos);
