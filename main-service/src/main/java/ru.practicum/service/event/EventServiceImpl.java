@@ -57,7 +57,7 @@ public class EventServiceImpl implements EventService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
-        Event event = eventMapper.toEvent(newEventDto, category,EventState.PENDING, user, LocalDateTime.now());
+        Event event = eventMapper.toEvent(newEventDto, category, EventState.PENDING, user, LocalDateTime.now());
         if (Optional.ofNullable(event.getPaid()).isEmpty()) {
             event.setPaid(Boolean.FALSE);
         }
@@ -225,7 +225,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public List<EventFullDto> getWithParamsAdmin(List<Long> users, List<EventState> states, List<Long> categoriesId,
-                                                     LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                 LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                  Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get parametryzed event list: admin; from {}, size {}", from, size);
         PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
@@ -257,7 +257,7 @@ public class EventServiceImpl implements EventService {
         }).collect(Collectors.toList());
         events = setView(events);
         List<EventFullDto> eventFullDtos = events.stream()
-                .map(event -> eventMapper.toEventFullDto(event)).collect(Collectors.toList());
+                .map(eventMapper::toEventFullDto).collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: event list formed");
         return eventFullDtos;
     }
@@ -265,8 +265,8 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getWithParams(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
-                                               LocalDateTime rangeEnd, Boolean onlyAvailable, SortFormat sort,
-                                               Integer from, Integer size, HttpServletRequest request) {
+                                             LocalDateTime rangeEnd, Boolean onlyAvailable, SortFormat sort,
+                                             Integer from, Integer size, HttpServletRequest request) {
         log.info("MAIN SERVICE LOG: event list forming; from {}, size {}", from, size);
         PageRequest pageRequest;
         if (Optional.ofNullable(sort).isEmpty()) {
@@ -337,7 +337,7 @@ public class EventServiceImpl implements EventService {
         String start = events.stream()
                 .map(Event::getCreatedOn)
                 .min(LocalDateTime::compareTo)
-                .orElseThrow(() -> new NotFoundException("date time exception"))
+                .orElse(LocalDateTime.now())
                 .format(dateFormatter);
 
         String endTime = LocalDateTime.now().format(dateFormatter);

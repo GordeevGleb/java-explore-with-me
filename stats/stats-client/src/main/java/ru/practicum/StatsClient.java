@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -14,11 +15,12 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -45,14 +47,14 @@ public class StatsClient {
     }
 
     public List<ViewStatsResponseDto> getStats(String start, String end, List<String> uris, Boolean unique) {
-
+        log.info("params: start " + start + " end " + end + " uris " + uris + "unique " + unique);
         Map<String, Object> parameters = new HashMap<>();
 
         parameters.put("start", start);
         parameters.put("end", end);
         parameters.put("uris", uris);
         parameters.put("unique", unique);
-log.info("params: start " + start + " end " + end + " uris " + uris + "unique " + unique);
+
         ResponseEntity<String> response = restTemplate.getForEntity(
                 serverUrl + "/stats?start={start}&end={end}&uris={uris}&unique={unique}",
                 String.class, parameters);
@@ -62,7 +64,7 @@ log.info("params: start " + start + " end " + end + " uris " + uris + "unique " 
         try {
             return Arrays.asList(objectMapper.readValue(response.getBody(), ViewStatsResponseDto[].class));
         } catch (JsonProcessingException exception) {
-            throw new RuntimeException("ERROR: " + exception.getMessage());
+            throw new RuntimeException("Json processing error: " + exception.getMessage());
         }
     }
 }
