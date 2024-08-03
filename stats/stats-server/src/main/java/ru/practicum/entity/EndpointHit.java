@@ -10,7 +10,9 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
@@ -25,5 +27,6 @@ public class EndpointHit {
     private String ip;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
+
 
 }

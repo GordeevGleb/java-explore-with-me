@@ -7,7 +7,7 @@ import ru.practicum.EndpointHitRequestDto;
 import ru.practicum.EndpointHitResponseDto;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.EndpointHit;
-import ru.practicum.entity.ViewStats;
+import ru.practicum.exception.DateTimeException;
 import ru.practicum.mapper.StatsMapper;
 import ru.practicum.repository.StatsRepository;
 import ru.practicum.util.StatsDateTimeFormatter;
@@ -30,6 +30,7 @@ public class StatsServiceImpl implements StatsService {
         log.info("STATS SERVER LOG: postHit");
         EndpointHit actual = statsMapper.toEndpointHit(endpointHitRequestDto);
         statsRepository.save(actual);
+        log.info("STATS SERVER LOG: endpointHit posted");
         return statsMapper.toEndpointHitResponseDto(actual);
     }
 
@@ -38,18 +39,22 @@ public class StatsServiceImpl implements StatsService {
         log.info("STATS SERVER LOG: getStats");
         LocalDateTime startTime = statsDateTimeFormatter.format(start);
         LocalDateTime endTime = statsDateTimeFormatter.format(end);
-        List<ViewStats> result;
-        if (uris != null) {
-            if (unique) {
-                result = statsRepository.findAllByTimeAndListOfUrisAndUniqueIp(startTime, endTime, uris);
-            } else {
-                result = statsRepository.findAllByTimeAndListOfUris(startTime, endTime, uris);
-            }
-        } else if (unique) {
-            result = statsRepository.findAllByTimeAndUniqueIp(startTime, endTime);
-        } else {
-            result = statsRepository.findAllByTime(startTime, endTime);
+        if (endTime.isBefore(startTime)) {
+            throw new DateTimeException("Date time exception");
         }
-        return statsMapper.toListViewStatsResponseDto(result);
+        List<ViewStatsResponseDto> resultList;
+        if (uris != null) {
+            resultList = unique.equals(Boolean.TRUE) ? statsMapper
+                    .toListViewStatsResponseDto(statsRepository.findUniqueByUris(startTime, endTime, uris)) :
+                    statsMapper.toListViewStatsResponseDto(statsRepository.findByUris(startTime,endTime, uris));
+        } else {
+            resultList = unique.equals(Boolean.TRUE) ? statsMapper
+                    .toListViewStatsResponseDto(statsRepository.findUnique(startTime,endTime)) :
+                    statsMapper.toListViewStatsResponseDto(statsRepository.findAll(startTime, endTime));
+        }
+        log.info("params: start " + start + " end " + end + " uris " + uris + " unique " + unique);
+        log.info("STATS SERVER LOG: stats list formed");
+        return resultList;
     }
 }
+
