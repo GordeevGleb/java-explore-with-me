@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -41,13 +42,17 @@ public class StatsServiceImpl implements StatsService {
     public void sendStat(List<Event> events, HttpServletRequest request) {
         LocalDateTime now = LocalDateTime.now();
         String nameService = "main-service";
-        EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
-                .timestamp(now.format(dateFormatter))
-                .uri(request.getRequestURI())
-                .app(nameService)
-                .ip(request.getRemoteAddr())
-                .build();
-        statsClient.addStats(requestDto);
+        List<EndpointHitRequestDto> hits = new ArrayList<>();
+        for (Event event : events) {
+            EndpointHitRequestDto requestDto = EndpointHitRequestDto.builder()
+                    .timestamp(now.format(dateFormatter))
+                    .uri(request.getRequestURI())
+                    .app(nameService)
+                    .ip(request.getRemoteAddr())
+                    .build();
+            hits.add(requestDto);
+        }
+        hits.forEach(statsClient::addStats);
     }
 
     @Override
