@@ -333,11 +333,11 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toEventFullDto(event);
     }
 
-    public List<Event> setView(List<Event> events) {
+    private List<Event> setView(List<Event> events) {
         String start = events.stream()
                 .map(Event::getCreatedOn)
                 .min(LocalDateTime::compareTo)
-                .orElse(LocalDateTime.now())
+                .get()
                 .format(dateFormatter);
 
         String endTime = LocalDateTime.now().format(dateFormatter);
@@ -345,8 +345,8 @@ public class EventServiceImpl implements EventService {
         List<String> uris = events.stream()
                 .map(event -> String.format("/events/%s", event.getId()))
                 .collect(Collectors.toList());
-
         List<ViewStatsResponseDto> viewStatsResponseDtos = statsService.getStats(start, endTime, uris);
+        log.info("*********** PASSED");
         Map<Long, Long> eventHits = new HashMap<>();
 
         for (ViewStatsResponseDto viewStatsResponseDto : viewStatsResponseDtos) {

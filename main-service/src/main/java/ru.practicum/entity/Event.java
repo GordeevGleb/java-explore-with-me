@@ -1,5 +1,6 @@
 package ru.practicum.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.enums.EventState;
 
@@ -40,6 +41,7 @@ public class Event {
     private String description;
 
     @Column(name = "event_date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     @ManyToOne
@@ -56,6 +58,7 @@ public class Event {
     private Long participantLimit;
 
     @Column(name = "published_on")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedOn;
 
     @Column(name = "request_moderation")
