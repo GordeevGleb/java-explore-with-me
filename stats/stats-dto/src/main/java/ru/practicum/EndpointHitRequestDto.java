@@ -1,10 +1,11 @@
 package ru.practicum;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -24,6 +25,6 @@ public class EndpointHitRequestDto {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @NotNull
-    private String timestamp;
+    private LocalDateTime timestamp;
 
 }

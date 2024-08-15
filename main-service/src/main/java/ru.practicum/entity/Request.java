@@ -1,9 +1,8 @@
 package ru.practicum.entity;
 
+import jakarta.persistence.*;
 import lombok.*;
 import ru.practicum.enums.RequestStatus;
-
-import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Getter
@@ -15,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class Request {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

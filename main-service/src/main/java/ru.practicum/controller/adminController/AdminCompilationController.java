@@ -1,5 +1,6 @@
 package ru.practicum.controller.adminController;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -8,8 +9,6 @@ import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.NewCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationRequest;
 import ru.practicum.service.compilation.CompilationService;
-
-import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/admin/compilations")

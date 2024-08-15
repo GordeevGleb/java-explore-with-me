@@ -1,5 +1,6 @@
 package ru.practicum.controller.privateController;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -13,8 +14,6 @@ import ru.practicum.dto.request.EventRequestStatusUpdateResult;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.service.event.EventService;
 import ru.practicum.service.request.RequestService;
-
-import javax.validation.Valid;
 import java.util.List;
 
 @RestController

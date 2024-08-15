@@ -1,5 +1,6 @@
 package ru.practicum.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -13,8 +14,6 @@ import ru.practicum.EndpointHitRequestDto;
 import ru.practicum.EndpointHitResponseDto;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.service.StatsService;
-
-import javax.validation.Valid;
 import java.util.List;
 
 @RestController
