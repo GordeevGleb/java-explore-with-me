@@ -407,7 +407,7 @@ log.info("MAIN SERVICE LOG: getting events with params public");
                 .map(event -> String.format("/events/%s", event.getId()))
                 .collect(Collectors.toList());
 
-        List<ViewStatsResponseDto> views = statsClient.getStats(start, LocalDateTime.now(), uris, true);
+        List<ViewStatsResponseDto> views = statsClient.getStats(start, LocalDateTime.now(), uris, false);
 
         Map<Long, Long> eventViews = new HashMap<>();
 
