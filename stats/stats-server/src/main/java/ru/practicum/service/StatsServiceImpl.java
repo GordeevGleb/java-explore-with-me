@@ -3,8 +3,8 @@ package ru.practicum.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.EndpointHitRequestDto;
-import ru.practicum.EndpointHitResponseDto;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.EndpointHitDto;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.EndpointHit;
 import ru.practicum.exception.DateTimeException;
@@ -17,6 +17,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class StatsServiceImpl implements StatsService {
 
     private final StatsRepository statsRepository;
@@ -26,15 +27,16 @@ public class StatsServiceImpl implements StatsService {
     private final StatsDateTimeFormatter statsDateTimeFormatter;
 
     @Override
-    public EndpointHitResponseDto postHit(EndpointHitRequestDto endpointHitRequestDto) {
+    public EndpointHitDto postHit(EndpointHitDto endpointHitDto) {
         log.info("STATS SERVER LOG: postHit");
-        EndpointHit actual = statsMapper.toEndpointHit(endpointHitRequestDto);
+        EndpointHit actual = statsMapper.toEndpointHit(endpointHitDto);
         statsRepository.save(actual);
         log.info("STATS SERVER LOG: endpointHit posted");
-        return statsMapper.toEndpointHitResponseDto(actual);
+        return statsMapper.toEndpointHitDto(actual);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ViewStatsResponseDto> getStats(String start, String end, List<String> uris, Boolean unique) {
         log.info("STATS SERVER LOG: getStats");
         LocalDateTime startTime = statsDateTimeFormatter.format(start);

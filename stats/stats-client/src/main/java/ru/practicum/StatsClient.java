@@ -29,7 +29,7 @@ public class StatsClient {
                 .build();
     }
 
-    public void addStats(EndpointHitRequestDto endpointHitDto) {
+    public void addStats(EndpointHitDto endpointHitDto) {
         restTemplate.postForObject("/hit", endpointHitDto, Void.class);
         log.info("STATS SERVER: requestDto " + endpointHitDto.toString());
     }

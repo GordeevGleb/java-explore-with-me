@@ -59,6 +59,8 @@ public class RequestServiceImpl implements RequestService {
                 .status(RequestStatus.PENDING)
                 .build();
         if (event.getRequestModeration().equals(Boolean.FALSE) || event.getParticipantLimit() == 0) {
+            event.setConfirmedRequestCount(Optional.ofNullable
+                    (event.getConfirmedRequestCount()).isEmpty() ? 1L : event.getConfirmedRequestCount() + 1);
             actual.setStatus(RequestStatus.CONFIRMED);
         }
         requestRepository.save(actual);
@@ -111,7 +113,7 @@ public class RequestServiceImpl implements RequestService {
         }
         if (RequestStatus.CONFIRMED.equals(eventRequestStatusUpdateRequest.getStatus())) {
             requests.stream().forEach(request -> {
-                if (event.getConfirmedRequestCount() < event.getParticipantLimit()) {
+                 if (event.getConfirmedRequestCount() < event.getParticipantLimit()) {
                     request.setStatus(RequestStatus.CONFIRMED);
                     event.setConfirmedRequestCount(event.getConfirmedRequestCount() + 1);
                 } else if (event.getConfirmedRequestCount() >= event.getParticipantLimit()) {
