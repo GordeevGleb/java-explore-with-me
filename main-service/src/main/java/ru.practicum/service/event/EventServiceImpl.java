@@ -323,6 +323,9 @@ log.info("MAIN SERVICE LOG: getting events with params public");
             }
             criteria = builder.and(criteria, isPaid);
         }
+        if (rangeStart.isAfter(rangeEnd)) {
+            throw new DateTimeException("Date time exception");
+        }
 
         if (rangeStart != null) {
             Predicate greaterTime = builder.greaterThanOrEqualTo(root.get("eventDate").as(LocalDateTime.class), rangeStart);
@@ -404,7 +407,7 @@ log.info("MAIN SERVICE LOG: getting events with params public");
                 .map(event -> String.format("/events/%s", event.getId()))
                 .collect(Collectors.toList());
 
-        List<ViewStatsResponseDto> views = statsClient.getStats(start, LocalDateTime.now(), uris, false);
+        List<ViewStatsResponseDto> views = statsClient.getStats(start, LocalDateTime.now(), uris, true);
 
         Map<Long, Long> eventViews = new HashMap<>();
 
