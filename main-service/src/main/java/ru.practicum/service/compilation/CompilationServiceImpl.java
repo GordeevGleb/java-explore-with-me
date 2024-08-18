@@ -77,6 +77,7 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: getting compilation list; size: " + size + " from: " + from);
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -85,15 +86,13 @@ public class CompilationServiceImpl implements CompilationService {
         Root<Compilation> root = query.from(Compilation.class);
         Predicate criteria = builder.conjunction();
 
-        if (pinned != null) {
-            Predicate isPinned;
-            if (pinned) {
-                isPinned = builder.isTrue(root.get("pinned"));
-            } else {
-                isPinned = builder.isFalse(root.get("pinned"));
-            }
-            criteria = builder.and(criteria, isPinned);
+        Predicate isPinned;
+        if (pinned) {
+            isPinned = builder.isTrue(root.get("pinned"));
+        } else {
+            isPinned = builder.isFalse(root.get("pinned"));
         }
+        criteria = builder.and(criteria, isPinned);
 
         query.select(root).where(criteria);
         List<Compilation> compilations = entityManager.createQuery(query)

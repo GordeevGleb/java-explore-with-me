@@ -11,8 +11,5 @@ import java.util.List;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Boolean existsByName(String name);
 
-    @Query("SELECT c.id FROM Category c")
-    List<Long> findAllId();
-
     List<Category> findAllByIdIn(List<Long> categoriesIds);
 }
