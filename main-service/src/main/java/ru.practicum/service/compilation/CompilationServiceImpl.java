@@ -86,13 +86,15 @@ public class CompilationServiceImpl implements CompilationService {
         Root<Compilation> root = query.from(Compilation.class);
         Predicate criteria = builder.conjunction();
 
-        Predicate isPinned;
-        if (pinned) {
-            isPinned = builder.isTrue(root.get("pinned"));
-        } else {
-            isPinned = builder.isFalse(root.get("pinned"));
+        if (pinned != null) {
+            Predicate isPinned;
+            if (pinned) {
+                isPinned = builder.isTrue(root.get("pinned"));
+            } else {
+                isPinned = builder.isFalse(root.get("pinned"));
+            }
+            criteria = builder.and(criteria, isPinned);
         }
-        criteria = builder.and(criteria, isPinned);
 
         query.select(root).where(criteria);
         List<Compilation> compilations = entityManager.createQuery(query)
