@@ -1,5 +1,10 @@
 package ru.practicum.service.compilation;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +34,8 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationMapper compilationMapper;
     private final EventMapper eventMapper;
 
+    private final EntityManager entityManager;
+
 
     @Override
     @Transactional
@@ -41,9 +48,9 @@ public class CompilationServiceImpl implements CompilationService {
             events = new ArrayList<>();
         }
         Compilation actual = compilationMapper.toCompilation(newCompilationDto, new HashSet<>(events));
-        if (Optional.ofNullable(newCompilationDto.getPinned()).isEmpty()) {
-            actual.setPinned(Boolean.FALSE);
-        }
+//        if (Optional.ofNullable(newCompilationDto.getPinned()).isEmpty()) {
+//            actual.setPinned(Boolean.FALSE);
+//        }
         actual = compilationRepository.save(actual);
         List<EventShortDto> compilationEvents = actual
                 .getEvents()
@@ -72,30 +79,34 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
-        log.info("MAIN SERVICE LOG: getting compilation list");
-        List<CompilationDto> compilationDtos = new ArrayList<>();
-        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
+        log.info("MAIN SERVICE LOG: getting compilation list; size: " + size + " from: " + from);
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Compilation> query = builder.createQuery(Compilation.class);
 
-        if (pinned) {
-            List<Compilation> compilations = compilationRepository
-                    .getCompilationsWithEventsPinned(pageRequest, pinned).toList();
-            for (Compilation compilation : compilations) {
-                List<Event> events = new ArrayList<>(compilation.getEvents());
-                List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(events);
-                compilationDtos.add(compilationMapper.toCompilationDto(compilation, eventShortDtos));
+        Root<Compilation> root = query.from(Compilation.class);
+        Predicate criteria = builder.conjunction();
+
+        if (pinned != null) {
+            Predicate isPinned;
+            if (pinned) {
+                isPinned = builder.isTrue(root.get("pinned"));
+            } else {
+                isPinned = builder.isFalse(root.get("pinned"));
             }
-        } else {
-            List<Compilation> compilations = compilationRepository
-                    .getCompilationsWithEvents(pageRequest).toList();
-            for (Compilation compilation : compilations) {
-                List<Event> events = new ArrayList<>(compilation.getEvents());
-                List<EventShortDto> eventShortDtos = eventMapper.toEventShortDtoList(events);
-                compilationDtos.add(compilationMapper.toCompilationDto(compilation, eventShortDtos));
-            }
+            criteria = builder.and(criteria, isPinned);
         }
-        log.info("MAIN SERVICE LOG: compilation list formed; size: {}", compilationDtos.size());
+
+        query.select(root).where(criteria);
+        List<Compilation> compilations = entityManager.createQuery(query)
+                .setFirstResult(from)
+                .setMaxResults(size)
+                .getResultList();
+        log.info("MAIN SERVICE LOG: compilation:" + compilations);
+        List<CompilationDto> compilationDtos = compilationMapper.toListCompilationDto(compilations);
+        log.info("MAIN SERVICE LOG: compilationDto: " + compilationDtos);
         return compilationDtos;
     }
+
 
     @Override
     @Transactional
