@@ -411,7 +411,7 @@ log.info("MAIN SERVICE LOG: getting events with params public");
                 .map(event -> String.format("/events/%s", event.getId()))
                 .collect(Collectors.toList());
 
-        List<ViewStatsResponseDto> views = statsClient.getStats(start, LocalDateTime.now(), uris, false);
+        List<ViewStatsResponseDto> views = statsClient.getStats(start, LocalDateTime.now(), uris, true);
 
         Map<Long, Long> eventViews = new HashMap<>();
 
@@ -425,10 +425,6 @@ log.info("MAIN SERVICE LOG: getting events with params public");
 
         return eventViews;
     }
-
-//    private Long getConfirmedRequestsCount(Long eventId) {
-//        return eventRepository.countConfirmedRequestsByEventId(eventId);
-//    }
 
     private Map<Long, Long> getConfirmedRequests(List<Event> events) {
         List<Request> requests = requestRepository.findAllByEventInAndStatusIs(events, RequestStatus.CONFIRMED);
