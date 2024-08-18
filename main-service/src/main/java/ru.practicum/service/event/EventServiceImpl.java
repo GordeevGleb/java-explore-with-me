@@ -294,6 +294,13 @@ public class EventServiceImpl implements EventService {
 log.info("MAIN SERVICE LOG: getting events with params public");
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> query = builder.createQuery(Event.class);
+        if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
+            throw new DateTimeException("Date time exception");
+        }
+
+        if (Optional.ofNullable(rangeStart).isEmpty()) {
+            rangeStart = LocalDateTime.now();
+        }
 
         Root<Event> root = query.from(Event.class);
         Predicate criteria = builder.conjunction();
@@ -322,9 +329,6 @@ log.info("MAIN SERVICE LOG: getting events with params public");
                 isPaid = builder.isFalse(root.get("paid"));
             }
             criteria = builder.and(criteria, isPaid);
-        }
-        if (rangeStart.isAfter(rangeEnd)) {
-            throw new DateTimeException("Date time exception");
         }
 
         if (rangeStart != null) {
