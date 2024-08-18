@@ -47,9 +47,9 @@ public class CompilationServiceImpl implements CompilationService {
             events = new ArrayList<>();
         }
         Compilation actual = compilationMapper.toCompilation(newCompilationDto, new HashSet<>(events));
-//        if (Optional.ofNullable(newCompilationDto.getPinned()).isEmpty()) {
-//            actual.setPinned(Boolean.FALSE);
-//        }
+        if (Optional.ofNullable(newCompilationDto.getPinned()).isEmpty()) {
+            actual.setPinned(Boolean.FALSE);
+        }
         actual = compilationRepository.save(actual);
         List<EventShortDto> compilationEvents = actual
                 .getEvents()
