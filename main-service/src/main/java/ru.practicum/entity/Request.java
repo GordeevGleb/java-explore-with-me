@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Setter
 @ToString
 @Entity
-@EqualsAndHashCode
 @Table(name = "requests")
 @AllArgsConstructor
 @NoArgsConstructor
