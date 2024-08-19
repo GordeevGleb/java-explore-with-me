@@ -28,7 +28,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto create(NewUserRequest newUserRequest) {
         log.info("MAIN SERVICE LOG: create user; name check");
-        if (userRepository.existsByName(newUserRequest.getName())) {
+        if (userRepository.existsByEmail(newUserRequest.getEmail())) {
             log.info("MAIN SERVICE LOG: name check failed");
             throw new ConcurrentNameException("could not execute statement; SQL [n/a]; constraint [uq_email];" +
                     " nested exception is org.hibernate.exception.ConstraintViolationException:" +
