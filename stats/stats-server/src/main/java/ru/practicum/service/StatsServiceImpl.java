@@ -3,11 +3,11 @@ package ru.practicum.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.EndpointHitRequestDto;
-import ru.practicum.EndpointHitResponseDto;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.EndpointHitDto;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.entity.EndpointHit;
-import ru.practicum.entity.ViewStats;
+import ru.practicum.exception.DateTimeException;
 import ru.practicum.mapper.StatsMapper;
 import ru.practicum.repository.StatsRepository;
 import ru.practicum.util.StatsDateTimeFormatter;
@@ -17,6 +17,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class StatsServiceImpl implements StatsService {
 
     private final StatsRepository statsRepository;
@@ -26,30 +27,36 @@ public class StatsServiceImpl implements StatsService {
     private final StatsDateTimeFormatter statsDateTimeFormatter;
 
     @Override
-    public EndpointHitResponseDto postHit(EndpointHitRequestDto endpointHitRequestDto) {
+    public EndpointHitDto postHit(EndpointHitDto endpointHitDto) {
         log.info("STATS SERVER LOG: postHit");
-        EndpointHit actual = statsMapper.toEndpointHit(endpointHitRequestDto);
+        EndpointHit actual = statsMapper.toEndpointHit(endpointHitDto);
         statsRepository.save(actual);
-        return statsMapper.toEndpointHitResponseDto(actual);
+        log.info("STATS SERVER LOG: endpointHit posted");
+        return statsMapper.toEndpointHitDto(actual);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ViewStatsResponseDto> getStats(String start, String end, List<String> uris, Boolean unique) {
         log.info("STATS SERVER LOG: getStats");
         LocalDateTime startTime = statsDateTimeFormatter.format(start);
         LocalDateTime endTime = statsDateTimeFormatter.format(end);
-        List<ViewStats> result;
-        if (uris != null) {
-            if (unique) {
-                result = statsRepository.findAllByTimeAndListOfUrisAndUniqueIp(startTime, endTime, uris);
-            } else {
-                result = statsRepository.findAllByTimeAndListOfUris(startTime, endTime, uris);
-            }
-        } else if (unique) {
-            result = statsRepository.findAllByTimeAndUniqueIp(startTime, endTime);
-        } else {
-            result = statsRepository.findAllByTime(startTime, endTime);
+        if (endTime.isBefore(startTime)) {
+            throw new DateTimeException("Date time exception");
         }
-        return statsMapper.toListViewStatsResponseDto(result);
+        List<ViewStatsResponseDto> resultList;
+        if (uris != null) {
+            resultList = unique.equals(Boolean.TRUE) ? statsMapper
+                    .toListViewStatsResponseDto(statsRepository.findUniqueByUris(startTime, endTime, uris)) :
+                    statsMapper.toListViewStatsResponseDto(statsRepository.findByUris(startTime,endTime, uris));
+        } else {
+            resultList = unique.equals(Boolean.TRUE) ? statsMapper
+                    .toListViewStatsResponseDto(statsRepository.findUnique(startTime,endTime)) :
+                    statsMapper.toListViewStatsResponseDto(statsRepository.findAll(startTime, endTime));
+        }
+        log.info("params: start " + start + " end " + end + " uris " + uris + " unique " + unique);
+        log.info("STATS SERVER LOG: stats list formed");
+        return resultList;
     }
 }
+
