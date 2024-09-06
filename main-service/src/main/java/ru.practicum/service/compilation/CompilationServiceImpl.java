@@ -20,6 +20,8 @@ import ru.practicum.mapper.EventMapper;
 import ru.practicum.repository.CompilationRepository;
 import ru.practicum.repository.EventRepository;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.service.rating.RatingService;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,8 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final CompilationMapper compilationMapper;
     private final EventMapper eventMapper;
+
+    private final RatingService ratingService;
 
     private final EntityManager entityManager;
 
@@ -54,7 +58,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<EventShortDto> compilationEvents = actual
                 .getEvents()
                 .stream()
-                .map(eventMapper::toEventShortDto)
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
                 .collect(Collectors.toList());
         CompilationDto savedCompilation = compilationMapper.toCompilationDto(actual, compilationEvents);
         log.info("MAIN SERVICE LOG: compilation created");
@@ -70,7 +74,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<EventShortDto> compilationEvents = compilation
                 .getEvents()
                 .stream()
-                .map(eventMapper::toEventShortDto)
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
                 .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: compilation id " + id + " found");
         return compilationMapper.toCompilationDto(compilation, compilationEvents);
@@ -138,7 +142,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<EventShortDto> eventShortDtos = actual
                 .getEvents()
                 .stream()
-                .map(eventMapper::toEventShortDto)
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
                 .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: compilation id " + id + " updated");
         return compilationMapper.toCompilationDto(actual, eventShortDtos);

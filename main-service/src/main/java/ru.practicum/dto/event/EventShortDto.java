@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.dto.rating.EventShortRatingDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.dto.category.CategoryDto;
 
@@ -32,4 +33,6 @@ public class EventShortDto {
         private String title;
 
         private Long views;
+
+        private EventShortRatingDto eventShortRatingDto;
 }

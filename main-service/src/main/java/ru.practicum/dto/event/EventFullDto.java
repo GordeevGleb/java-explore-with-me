@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.dto.category.CategoryDto;
+import ru.practicum.dto.rating.EventFullRatingDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.entity.Location;
 import ru.practicum.enums.EventState;
@@ -51,4 +52,6 @@ public class EventFullDto {
     private String title;
 
     private Long views;
+
+    private EventFullRatingDto eventFullRatingDto;
 }

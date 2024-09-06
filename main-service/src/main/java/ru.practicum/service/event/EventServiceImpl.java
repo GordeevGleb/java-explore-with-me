@@ -10,10 +10,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.EndpointHitDto;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.dto.event.*;
+import ru.practicum.dto.rating.EventFullRatingDto;
 import ru.practicum.entity.Category;
 import ru.practicum.entity.Event;
 import ru.practicum.entity.Request;
@@ -26,6 +28,8 @@ import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.RequestRepository;
 import ru.practicum.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.service.rating.RatingService;
+
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,6 +51,8 @@ public class EventServiceImpl implements EventService {
 
     private final StatsClient statsClient;
 
+    private final RatingService ratingService;
+
     private final EntityManager entityManager;
 
 
@@ -63,7 +69,8 @@ public class EventServiceImpl implements EventService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
-        Event event = eventMapper.toEvent(newEventDto, category, EventState.PENDING, user, LocalDateTime.now());
+        Event event = eventMapper.toEvent(newEventDto, category, EventState.PENDING, user,
+                LocalDateTime.now(), new HashSet<>());
         if (Optional.ofNullable(event.getPaid()).isEmpty()) {
             event.setPaid(Boolean.FALSE);
         }
@@ -71,7 +78,7 @@ public class EventServiceImpl implements EventService {
             event.setParticipantLimit(0L);
         }
         log.info("MAIN SERVICE LOG: event created");
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        return eventMapper.toEventFullDto(eventRepository.save(event),  new EventFullRatingDto());
     }
 
     @Override
@@ -81,7 +88,10 @@ public class EventServiceImpl implements EventService {
         PageRequest pageRequest = PageRequest.of(from / size, size);
         List<Event> actual = eventRepository.findAllByInitiatorId(userId, pageRequest).toList();
         log.info("MAIN SERVICE LOG: user id " + userId + " event list formed");
-        return eventMapper.toEventShortDtoList(actual);
+        List<EventShortDto> resultList = actual.stream()
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
+                .collect(Collectors.toList());
+        return resultList;
     }
 
     @Override
@@ -90,7 +100,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
         if (Optional.ofNullable(updateEventAdminRequest).isEmpty()) {
-            return eventMapper.toEventFullDto(event);
+            return eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event));
         }
         if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
             throw new EventDateTimeException("Cannot publish the event because of date time restriction");
@@ -159,7 +169,7 @@ public class EventServiceImpl implements EventService {
             event.setEventDate(updateEventAdminRequest.getEventDate());
         }
 
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        return eventMapper.toEventFullDto(eventRepository.save(event), ratingService.calculateEventRating(event));
     }
 
     @Override
@@ -169,7 +179,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
         if (Optional.ofNullable(updateEventUserRequest).isEmpty()) {
-            return eventMapper.toEventFullDto(event);
+            return eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event));
         }
         if (event.getState().equals(EventState.PUBLISHED)) {
             throw new EventStatusException("Only pending or canceled events can be changed");
@@ -215,7 +225,7 @@ public class EventServiceImpl implements EventService {
             }
         }
         log.info("MAIN SERVICE LOG: event updated by user");
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        return eventMapper.toEventFullDto(eventRepository.save(event), ratingService.calculateEventRating(event));
     }
 
     @Override
@@ -225,7 +235,7 @@ public class EventServiceImpl implements EventService {
         Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
         log.info("MAIN SERVICE LOG: event found");
-        return eventMapper.toEventFullDto(actual);
+        return eventMapper.toEventFullDto(actual, ratingService.calculateEventRating(actual));
     }
 
     @Override
@@ -283,7 +293,10 @@ public class EventServiceImpl implements EventService {
                 .peek(event -> event.setConfirmedRequestCount(requests.getOrDefault(event.getId(), 0L)))
                 .peek(event -> event.setViewCount(views.getOrDefault(event.getId(), 0L)))
                 .collect(Collectors.toList());
-        return eventMapper.toEventFullDtoList(events);
+        List<EventFullDto> resultList = events.stream()
+                .map(event -> eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event)))
+                .collect(Collectors.toList());
+        return resultList;
     }
 
     @Override
@@ -371,7 +384,10 @@ log.info("MAIN SERVICE LOG: getting events with params public");
 
         Map<Long, Long> requests = getConfirmedRequests(events);
 
-        List<EventShortDto> result = eventMapper.toEventShortDtoList(events);
+        List<EventShortDto> result = events.stream()
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
+                .collect(Collectors.toList());
+
         result = result.stream()
                 .peek(event -> event.setViews(views.getOrDefault(event.getId(), 0L)))
                 .peek(event -> event.setConfirmedRequests(requests.getOrDefault(event.getId(), 0L)))
@@ -392,7 +408,7 @@ log.info("MAIN SERVICE LOG: getting events with params public");
 
         Map<Long, Long> requests = getConfirmedRequests(List.of(event));
 
-        EventFullDto result = eventMapper.toEventFullDto(event);
+        EventFullDto result = eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event));
         result.setConfirmedRequests(requests.getOrDefault(event.getId(), 0L));
         result.setViews(views.getOrDefault(event.getId(), 0L));
 

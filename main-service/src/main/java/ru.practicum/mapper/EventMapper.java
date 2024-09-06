@@ -5,13 +5,17 @@ import org.mapstruct.Mapping;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.event.NewEventDto;
+import ru.practicum.dto.rating.EventFullRatingDto;
+import ru.practicum.dto.rating.EventShortRatingDto;
 import ru.practicum.entity.Category;
 import ru.practicum.entity.Event;
+import ru.practicum.entity.Rating;
 import ru.practicum.entity.User;
 import ru.practicum.enums.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Mapper(componentModel = "spring")
 public interface EventMapper {
@@ -26,17 +30,22 @@ public interface EventMapper {
                   Category category,
                   EventState eventState,
                   User initiator,
-                  LocalDateTime localDateTime);
+                  LocalDateTime localDateTime,
+                  Set<Rating> ratingSet);
 
-    List<EventShortDto> toEventShortDtoList(List<Event> events);
-
-    @Mapping(target = "confirmedRequests", source = "event.confirmedRequestCount")
-    @Mapping(target = "views", source = "event.viewCount")
-    EventFullDto toEventFullDto(Event event);
-
-    EventShortDto toEventShortDto(Event event);
+//    @Mapping(target = "ratingSet", ignore = true)
+//    List<EventShortDto> toEventShortDtoList(List<Event> events);
 
     @Mapping(target = "confirmedRequests", source = "event.confirmedRequestCount")
     @Mapping(target = "views", source = "event.viewCount")
-    List<EventFullDto> toEventFullDtoList(List<Event> events);
+    @Mapping(target = "eventFullRatingDto", source = "eventFullRatingDto")
+    EventFullDto toEventFullDto(Event event, EventFullRatingDto eventFullRatingDto);
+
+    @Mapping(target = "eventShortRatingDto", source = "eventShortRatingDto")
+    EventShortDto toEventShortDto(Event event, EventShortRatingDto eventShortRatingDto);
+
+//    @Mapping(target = "confirmedRequests", source = "event.confirmedRequestCount")
+//    @Mapping(target = "views", source = "event.viewCount")
+//    @Mapping(target = "ratingSet", ignore = true)
+//    List<EventFullDto> toEventFullDtoList(List<Event> events);
 }
