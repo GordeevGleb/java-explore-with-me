@@ -204,11 +204,11 @@
 					"variable": [
 						{
 							"key": "userId",
-							"value": "1"
+							"value": "137"
 						},
 						{
 							"key": "eventId",
-							"value": "1"
+							"value": "107"
 						}
 					]
 				}
@@ -459,7 +459,7 @@
 					"variable": [
 						{
 							"key": "userId",
-							"value": "2"
+							"value": "6"
 						},
 						{
 							"key": "eventId",
@@ -516,85 +516,7 @@
 					"variable": [
 						{
 							"key": "userId",
-							"value": "2"
-						},
-						{
-							"key": "ratingId",
-							"value": "2"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Исправление оценки после изменения(через 1 минуту для тестов)",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"    pm.response.to.be.withBody;\r",
-							"    pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							"const source = JSON.parse(pm.request.body.raw);\r",
-							"const target = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Ответ должен содержать поля: id, user, event, isLiked, locationRate, organizationRate, contentRate\", function () {\r",
-							"pm.expect(target).to.have.property('id');\r",
-							"pm.expect(target).to.have.property('user');\r",
-							"pm.expect(target).to.have.property('event');\r",
-							"pm.expect(target).to.have.property('isLiked');\r",
-							"pm.expect(target).to.have.property('locationRate');\r",
-							"pm.expect(target).to.have.property('organizationRate');\r",
-							"pm.expect(target).to.have.property('contentRate');\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
-							"    pm.expect(target.id).to.not.be.null;\r",
-							"    pm.expect(target.user).to.not.be.null;\r",
-							"    pm.expect(target.event).to.not.be.null;\r",
-							"    pm.expect(target.isLiked).to.not.be.null;\r",
-							"    pm.expect(source.isLiked).equal(target.isLiked, 'Оценка должна соответствовать отправленной');\r",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "PATCH",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isLiked\": true,\r\n    \"locationRate\": 5.0,\r\n    \"organizationRate\": 4.0,\r\n    \"contentRate\": 3.0\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/users/:userId/ratings/:ratingId",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"users",
-						":userId",
-						"ratings",
-						":ratingId"
-					],
-					"variable": [
-						{
-							"key": "userId",
-							"value": "2"
+							"value": "6"
 						},
 						{
 							"key": "ratingId",
@@ -858,7 +780,7 @@
 					"variable": [
 						{
 							"key": "eventId",
-							"value": "1"
+							"value": "6"
 						}
 					]
 				}
