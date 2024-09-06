@@ -1,6 +1,5 @@
 package ru.practicum.service.rating;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.rating.*;
 import ru.practicum.entity.Event;

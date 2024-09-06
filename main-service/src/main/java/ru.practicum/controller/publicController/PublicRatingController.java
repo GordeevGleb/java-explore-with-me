@@ -3,7 +3,6 @@ package ru.practicum.controller.publicController;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.EventShortDto;
-import ru.practicum.dto.rating.OutRatingDto;
 import ru.practicum.dto.rating.OutRatingShortDto;
 import ru.practicum.service.rating.RatingService;
 

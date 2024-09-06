@@ -6,7 +6,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.rating.IncRatingDto;
 import ru.practicum.dto.rating.OutRatingDto;
-import ru.practicum.entity.Rating;
 import ru.practicum.service.rating.RatingService;
 
 import java.util.List;

@@ -14,7 +14,6 @@ import ru.practicum.entity.User;
 import ru.practicum.enums.EventState;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Mapper(componentModel = "spring")

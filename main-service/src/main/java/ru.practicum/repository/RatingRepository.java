@@ -2,7 +2,6 @@ package ru.practicum.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import ru.practicum.entity.Event;
 import ru.practicum.entity.Rating;
 
 import java.util.List;
