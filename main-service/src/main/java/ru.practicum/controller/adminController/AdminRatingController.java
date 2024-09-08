@@ -6,6 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.rating.IncRatingDto;
 import ru.practicum.dto.rating.OutRatingDto;
+import ru.practicum.enums.LikeParam;
 import ru.practicum.service.rating.RatingService;
 
 import java.util.List;
@@ -46,9 +47,11 @@ public class AdminRatingController {
     }
 
     @GetMapping
-    public List<OutRatingDto> getAll(@RequestParam (required = false) Boolean likesOrDislikesOnly,
-                                @RequestParam(required = false, defaultValue = "0") Integer from,
-                                @RequestParam(required = false, defaultValue = "10") Integer size) {
-        return ratingService.getAll(likesOrDislikesOnly, from, size);
+    public List<OutRatingDto> getAll(@RequestParam (required = false) LikeParam likeParam,
+                                     @RequestParam (required = false) List<Long> userIds,
+                                     @RequestParam (required = false) List<Long> eventIds,
+                                     @RequestParam(required = false, defaultValue = "0") Integer from,
+                                     @RequestParam(required = false, defaultValue = "10") Integer size) {
+        return ratingService.getAll(likeParam, userIds, eventIds, from, size);
     }
 }

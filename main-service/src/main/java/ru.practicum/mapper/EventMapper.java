@@ -32,9 +32,6 @@ public interface EventMapper {
                   LocalDateTime localDateTime,
                   Set<Rating> ratingSet);
 
-//    @Mapping(target = "ratingSet", ignore = true)
-//    List<EventShortDto> toEventShortDtoList(List<Event> events);
-
     @Mapping(target = "confirmedRequests", source = "event.confirmedRequestCount")
     @Mapping(target = "views", source = "event.viewCount")
     @Mapping(target = "eventFullRatingDto", source = "eventFullRatingDto")
@@ -42,9 +39,4 @@ public interface EventMapper {
 
     @Mapping(target = "eventShortRatingDto", source = "eventShortRatingDto")
     EventShortDto toEventShortDto(Event event, EventShortRatingDto eventShortRatingDto);
-
-//    @Mapping(target = "confirmedRequests", source = "event.confirmedRequestCount")
-//    @Mapping(target = "views", source = "event.viewCount")
-//    @Mapping(target = "ratingSet", ignore = true)
-//    List<EventFullDto> toEventFullDtoList(List<Event> events);
 }

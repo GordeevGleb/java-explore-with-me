@@ -28,7 +28,7 @@ public class Rating {
     private User user;
 
     @NotNull
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "event_id")
     private Event event;
 
