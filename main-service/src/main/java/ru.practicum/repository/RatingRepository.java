@@ -15,4 +15,6 @@ public interface RatingRepository extends JpaRepository<Rating, Long>, JpaSpecif
     Boolean existsByUserIdAndEventId(Long userId, Long eventId);
 
     List<Rating> findAllByUserId(Long userId);
+
+    Boolean existsByUserId(Long userId);
 }

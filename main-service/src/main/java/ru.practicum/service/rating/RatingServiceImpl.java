@@ -58,7 +58,7 @@ public class RatingServiceImpl implements RatingService {
         if (user.getId().equals(event.getInitiator().getId())) {
             throw new WrongRequestException("initiator can't rate event");
         }
-        if (ratingRepository.existsByUserIdAndEventId(userId, eventId)) {
+        if (validateByUserIdAndEventId(userId, eventId)) {
             throw new IntegrityConflictException("can't rate again");
         }
 
@@ -136,7 +136,7 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public void delete(Long ratingId) {
         log.info("FEATURE SERVICE LOG: delete rating id " + ratingId);
-        if (ratingRepository.existsById(ratingId)) {
+        if (validateById(ratingId)) {
             ratingRepository.deleteById(ratingId);
         }
         log.info("FEATURE SERVICE LOG: rating removed");
@@ -145,9 +145,9 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public void deleteByUserId(Long userId) {
         log.info("FEATURE SERVICE LOG: removing all user id " + userId + " ratings");
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("user id " + userId + " not found"));
-        ratingRepository.removeAllByUserId(userId);
+        if (validateByUserId(userId)) {
+            ratingRepository.removeAllByUserId(userId);
+        }
         log.info("FEATURE SERVICE LOG: all users rating was removed");
     }
 
@@ -336,5 +336,17 @@ public class RatingServiceImpl implements RatingService {
         }
         int percentRate = (likesCount == 0 && dislikesCount == 0) ? 0 : (likesCount * 100) / (dislikesCount + likesCount);
         return EventShortRatingDto.builder().percentRating(percentRate).build();
+    }
+
+    private Boolean validateByUserIdAndEventId(Long userId, Long eventId) {
+        return ratingRepository.existsByUserIdAndEventId(userId, eventId);
+    }
+
+    private Boolean validateByUserId(Long userId) {
+        return ratingRepository.existsByUserId(userId);
+    }
+
+    private Boolean validateById(Long ratingId) {
+        return ratingRepository.existsById(ratingId);
     }
 }

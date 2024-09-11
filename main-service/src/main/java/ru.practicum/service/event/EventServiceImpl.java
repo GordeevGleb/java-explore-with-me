@@ -183,7 +183,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateByUser(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
         log.info("MAIN SERICE LOG: user id " + userId + " updating event id " + eventId);
         if (!validateByIdAndInitiatorId(eventId, userId)) {
-            throw new NotFoundException("Event with id=" + eventId + " was not found");
+            throw new NotFoundException("Event with id=" + eventId + " and initiator id " + userId + " was not found");
         }
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId).get();
         if (Optional.ofNullable(updateEventUserRequest).isEmpty()) {
@@ -241,7 +241,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getByIdUser(Long userId, Long eventId) {
         log.info("MAIN SERVICE LOG: getting event id " + eventId + " by user id " + userId);
         if (!validateByIdAndInitiatorId(eventId, userId)) {
-            throw new NotFoundException("Event with id=" + eventId + " was not found");
+            throw new NotFoundException("Event with id=" + eventId + " and initiator id " + userId + " was not found");
         }
         Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId).get();
         log.info("MAIN SERVICE LOG: event found");
@@ -362,7 +362,6 @@ public class EventServiceImpl implements EventService {
             Predicate lessTime = builder.lessThanOrEqualTo(root.get("eventDate").as(LocalDateTime.class), rangeEnd);
             criteria = builder.and(criteria, lessTime);
         }
-        log.info("MAIN SERVICE LOG: criteria:", criteria.getExpressions());
 
         query.select(root).where(criteria).orderBy(builder.asc(root.get("eventDate")));
         List<Event> events = entityManager.createQuery(query)
@@ -408,7 +407,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public EventFullDto getByIdPublic(Long id, HttpServletRequest request) {
-        if (!eventRepository.existsById(id)) {
+        if (!validateById(id)) {
             throw new NotFoundException(String.format("Event with id=%d was not found", id));
         }
         Event event = eventRepository.findById(id).get();
