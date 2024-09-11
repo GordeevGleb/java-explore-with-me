@@ -27,4 +27,6 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
             "AVG(r.organizationRate) > :organizationRate AND " +
             "AVG(r.contentRate) > :contentRate")
     List<Event> getByRatingParams(Float locationRate, Float organizationRate, Float contentRate);
+
+    Boolean existsByIdAndInitiatorId(Long eventId, Long userId);
 }

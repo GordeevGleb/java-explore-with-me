@@ -73,8 +73,10 @@ public class RequestServiceImpl implements RequestService {
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
         log.info("MAIN SERVICE LOG: getting user's event request list");
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (!eventRepository.existsById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
+        Event event = eventRepository.findById(eventId).get();
         if (!event.getInitiator().getId().equals(userId)) {
             throw new WrongRequestException("User must be event initiator");
         }
@@ -90,8 +92,10 @@ public class RequestServiceImpl implements RequestService {
                                                          EventRequestStatusUpdateRequest
                                                                      eventRequestStatusUpdateRequest) {
         log.info("MAIN SERVICE LOG: updating requests");
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (!eventRepository.existsById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
+        Event event = eventRepository.findById(eventId).get();
         if (Optional.ofNullable(eventRequestStatusUpdateRequest.getRequestIds()).isEmpty()) {
             throw new RequestStatusException("Field request id's shall not be blank");
         }
@@ -141,8 +145,9 @@ public class RequestServiceImpl implements RequestService {
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getUserRequests(Long id) {
         log.info("MAIN SERVICE LOG: getting user id " + id + " request list");
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User with id=" + id + " was not found"));
+        if (!userRepository.existsById(id)) {
+            throw new NotFoundException("User with id=" + id + " was not found");
+        }
         List<Request> userRequests = requestRepository.findAllByRequesterId(id);
         log.info("MAIN SERVICE LOG: user request list formed");
         return requestMapper.toParticipationRequestDtoList(userRequests);
@@ -152,10 +157,16 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         log.info("MAIN SERVICE LOG: user id " + userId + " cancel request id " + requestId);
-        Request request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException("Request with id=" + requestId + " was not found"));
+        if (!existById(requestId)) {
+            throw new NotFoundException("Request with id=" + requestId + " was not found");
+        }
+        Request request = requestRepository.findById(requestId).get();
         request.setStatus(RequestStatus.CANCELED);
         log.info("MAIN SERVICE LOG: request cancelled");
         return requestMapper.toParticipationRequestDto(requestRepository.save(request));
+    }
+
+    private Boolean existById(Long id) {
+        return requestRepository.existsById(id);
     }
 }

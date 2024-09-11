@@ -69,8 +69,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional(readOnly = true)
     public CompilationDto getById(Long id) {
         log.info("MAIN SERVICE LOG: get compilation id " + id);
-        Compilation compilation = compilationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
+        if (!validateById(id)) {
+            throw new NotFoundException("Compilation with id=" + id + " was not found");
+        }
+        Compilation compilation = compilationRepository.findById(id).get();
         List<EventShortDto> compilationEvents = compilation
                 .getEvents()
                 .stream()
@@ -116,8 +118,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public void delete(Long id) {
         log.info("MAIN SERVICE LOG: removing compilation id" + id);
-        Compilation actual = compilationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
+        if (!validateById(id)) {
+            throw new NotFoundException("Compilation with id=" + id + " was not found");
+        }
+        Compilation actual = compilationRepository.findById(id).get();
         compilationRepository.delete(actual);
         log.info("MAIN SERVICE LOG: compilation removed");
     }
@@ -126,8 +130,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public CompilationDto update(Long id, UpdateCompilationRequest updateCompilationRequest) {
         log.info("MAIN SERVICE LOG: updating compilation id " + id);
-        Compilation actual = compilationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
+        if (!validateById(id)) {
+            throw new NotFoundException("Compilation with id=" + id + " was not found");
+        }
+        Compilation actual = compilationRepository.findById(id).get();
         if (updateCompilationRequest.getEvents() != null) {
             List<Event> events = eventRepository.findAllByIdIn(updateCompilationRequest.getEvents());
             actual.setEvents(new HashSet<>(events));
@@ -146,5 +152,9 @@ public class CompilationServiceImpl implements CompilationService {
                 .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: compilation id " + id + " updated");
         return compilationMapper.toCompilationDto(actual, eventShortDtos);
+    }
+
+    private Boolean validateById(Long id) {
+        return compilationRepository.existsById(id);
     }
 }

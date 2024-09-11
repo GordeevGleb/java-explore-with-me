@@ -59,8 +59,10 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto create(Long userId, NewEventDto newEventDto) {
         log.info("MAIN SERVICE LOG: user id " + userId + " creating event");
-        Category category = categoryRepository.findById(newEventDto.getCategory())
-                .orElseThrow(() -> new NotFoundException("Category was not found"));
+        if (!categoryRepository.existsById(newEventDto.getCategory())) {
+            throw new NotFoundException("Category was not found");
+        }
+        Category category = categoryRepository.findById(newEventDto.getCategory()).get();
         LocalDateTime eventDate = newEventDto.getEventDate();
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
             throw new DateTimeException("Field: eventDate. Error: должно содержать дату, которая еще не наступила." +
@@ -77,13 +79,16 @@ public class EventServiceImpl implements EventService {
             event.setParticipantLimit(0L);
         }
         log.info("MAIN SERVICE LOG: event created");
-        return eventMapper.toEventFullDto(eventRepository.save(event),  new EventFullRatingDto());
+        return eventMapper.toEventFullDto(eventRepository.save(event), new EventFullRatingDto());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getUserEvents(Long userId, Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get user's events");
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("user id " + userId + " not found");
+        }
         PageRequest pageRequest = PageRequest.of(from / size, size);
         List<Event> actual = eventRepository.findAllByInitiatorId(userId, pageRequest).toList();
         log.info("MAIN SERVICE LOG: user id " + userId + " event list formed");
@@ -96,8 +101,10 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto updateByAdmin(Long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (!validateById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
+        Event event = eventRepository.findById(eventId).get();
         if (Optional.ofNullable(updateEventAdminRequest).isEmpty()) {
             return eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event));
         }
@@ -175,8 +182,10 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto updateByUser(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
         log.info("MAIN SERICE LOG: user id " + userId + " updating event id " + eventId);
-        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (!validateByIdAndInitiatorId(eventId, userId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId).get();
         if (Optional.ofNullable(updateEventUserRequest).isEmpty()) {
             return eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event));
         }
@@ -231,8 +240,10 @@ public class EventServiceImpl implements EventService {
     @Transactional(readOnly = true)
     public EventFullDto getByIdUser(Long userId, Long eventId) {
         log.info("MAIN SERVICE LOG: getting event id " + eventId + " by user id " + userId);
-        Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (!validateByIdAndInitiatorId(eventId, userId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
+        Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId).get();
         log.info("MAIN SERVICE LOG: event found");
         return eventMapper.toEventFullDto(actual, ratingService.calculateEventRating(actual));
     }
@@ -303,7 +314,7 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getWithParams(String text, List<Long> categoriesIds, Boolean paid, LocalDateTime rangeStart,
                                              LocalDateTime rangeEnd, Boolean onlyAvailable, SortFormat sort,
                                              Integer from, Integer size, HttpServletRequest request) {
-log.info("MAIN SERVICE LOG: getting events with params public");
+        log.info("MAIN SERVICE LOG: getting events with params public");
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> query = builder.createQuery(Event.class);
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
@@ -397,8 +408,10 @@ log.info("MAIN SERVICE LOG: getting events with params public");
     @Override
     @Transactional(readOnly = true)
     public EventFullDto getByIdPublic(Long id, HttpServletRequest request) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%d was not found", id)));
+        if (!eventRepository.existsById(id)) {
+            throw new NotFoundException(String.format("Event with id=%d was not found", id));
+        }
+        Event event = eventRepository.findById(id).get();
         if (event.getState() != EventState.PUBLISHED) {
             throw new NotFoundException(String.format("Event with id=%d was not found", id));
         }
@@ -462,5 +475,13 @@ log.info("MAIN SERVICE LOG: getting events with params public");
                 .ip(request.getRemoteAddr())
                 .timestamp(LocalDateTime.now())
                 .build());
+    }
+
+    private Boolean validateById(Long id) {
+        return eventRepository.existsById(id);
+    }
+
+    private Boolean validateByIdAndInitiatorId(Long eventId, Long userId) {
+        return eventRepository.existsByIdAndInitiatorId(eventId, userId);
     }
 }
