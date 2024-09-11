@@ -21,10 +21,6 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
 
     Boolean existsByCategoryId(Long catId);
 
-//    @Query("select e from Event as e join Rating as r on r.event.id = e.id having ((avg(r.locationRate) > :locationRate) and " +
-//            "(avg(r.organizationRate) > :organizationRate) and (avg(r.contentRate) > :contentRate))")
-//    List<Event> getByRatingParams(Float locationRate, Float organizationRate, Float contentRate);
-
     @Query("SELECT e FROM Event e JOIN e.ratingList r " +
             "GROUP BY e " +
             "HAVING AVG(r.locationRate) > :locationRate AND " +

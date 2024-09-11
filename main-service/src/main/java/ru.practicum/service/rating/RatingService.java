@@ -3,6 +3,7 @@ package ru.practicum.service.rating;
 import ru.practicum.dto.event.EventShortDto;
 import ru.practicum.dto.rating.*;
 import ru.practicum.entity.Event;
+import ru.practicum.enums.QueryLikeParam;
 
 import java.util.List;
 
@@ -20,9 +21,13 @@ public interface RatingService {
 
     OutRatingDto getById(Long ratingId);
 
-    List<OutRatingDto> getAllUsersRatings(Long userId, Boolean likesOrDislikesOnly, Integer from, Integer size);
+    List<OutRatingDto> getAllUsersRatings(Long userId, QueryLikeParam queryLikeParam, Integer from, Integer size);
 
-    List<OutRatingDto> getAll(Boolean likesOrDislikesOnly, Integer from, Integer size);
+    List<OutRatingDto> getAll(QueryLikeParam queryLikeParam,
+                              List<Long> users,
+                              List<Long> events,
+                              Integer from,
+                              Integer size);
 
     List<OutRatingShortDto> getByEventId(Long eventId);
 

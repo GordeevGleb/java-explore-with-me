@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.rating.IncRatingDto;
 import ru.practicum.dto.rating.OutRatingDto;
+import ru.practicum.enums.QueryLikeParam;
 import ru.practicum.service.rating.RatingService;
 
 import java.util.List;
@@ -34,9 +35,9 @@ public class PrivateRatingController {
 
     @GetMapping
     public List<OutRatingDto> getAll(@PathVariable Long userId,
-                                     @RequestParam (required = false) Boolean likesOrDislikesOnly,
+                                     @RequestParam(required = false) QueryLikeParam queryLikeParam,
                                      @RequestParam(required = false, defaultValue = "0") Integer from,
                                      @RequestParam(required = false, defaultValue = "10") Integer size) {
-        return ratingService.getAllUsersRatings(userId, likesOrDislikesOnly, from, size);
+        return ratingService.getAllUsersRatings(userId, queryLikeParam, from, size);
     }
 }

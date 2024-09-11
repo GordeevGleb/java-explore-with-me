@@ -15,6 +15,7 @@ import ru.practicum.dto.user.UserDto;
 import ru.practicum.entity.Event;
 import ru.practicum.entity.Rating;
 import ru.practicum.entity.User;
+import ru.practicum.enums.QueryLikeParam;
 import ru.practicum.exception.*;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.mapper.RatingMapper;
@@ -53,7 +54,7 @@ public class RatingServiceImpl implements RatingService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("user id " + userId + " not found"));
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() ->  new NotFoundException("event id " + eventId + " not found"));
+                .orElseThrow(() -> new NotFoundException("event id " + eventId + " not found"));
         if (user.getId().equals(event.getInitiator().getId())) {
             throw new WrongRequestException("initiator can't rate event");
         }
@@ -165,7 +166,7 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OutRatingDto> getAllUsersRatings(Long userId, Boolean likesOrDislikesOnly,
+    public List<OutRatingDto> getAllUsersRatings(Long userId, QueryLikeParam queryLikeParam,
                                                  Integer from, Integer size) {
         log.info("FEATURE SERVICE LOG: get all user");
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -174,15 +175,18 @@ public class RatingServiceImpl implements RatingService {
         Root<Rating> root = query.from(Rating.class);
         Predicate criteria = builder.conjunction();
 
-        if (likesOrDislikesOnly != null) {
+        if (queryLikeParam != null) {
             Predicate isLiked;
-            if (likesOrDislikesOnly) {
+            if (queryLikeParam.equals(QueryLikeParam.ONLY_LIKED)) {
                 isLiked = builder.isTrue(root.get("isLiked"));
             } else {
                 isLiked = builder.isFalse(root.get("isLiked"));
             }
             criteria = builder.and(criteria, isLiked);
         }
+
+        Predicate userPredicate = builder.equal(root.get("user").get("id"), userId);
+        criteria = builder.and(criteria, userPredicate);
 
         query.select(root).where(criteria);
         List<Rating> userRatings = entityManager.createQuery(query)
@@ -195,7 +199,9 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OutRatingDto> getAll(Boolean likesOrDislikesOnly,
+    public List<OutRatingDto> getAll(QueryLikeParam queryLikeParam,
+                                     List<Long> users,
+                                     List<Long> events,
                                      Integer from,
                                      Integer size) {
         log.info("FEATURE SERVICE LOG: get all rating list with params");
@@ -205,14 +211,24 @@ public class RatingServiceImpl implements RatingService {
         Root<Rating> root = query.from(Rating.class);
         Predicate criteria = builder.conjunction();
 
-        if (likesOrDislikesOnly != null) {
+        if (queryLikeParam != null) {
             Predicate isLiked;
-            if (likesOrDislikesOnly) {
+            if (queryLikeParam.equals(QueryLikeParam.ONLY_LIKED)) {
                 isLiked = builder.isTrue(root.get("isLiked"));
             } else {
                 isLiked = builder.isFalse(root.get("isLiked"));
             }
             criteria = builder.and(criteria, isLiked);
+        }
+
+        if (Optional.ofNullable(users).isPresent() && users.size() > 0) {
+            Predicate containUsers = root.get("user").get("id").in(users);
+            criteria = builder.and(criteria, containUsers);
+        }
+
+        if (Optional.ofNullable(events).isPresent() && events.size() > 0) {
+            Predicate containEvents = root.get("event").get("id").in(events);
+            criteria = builder.and(criteria, containEvents);
         }
 
         query.select(root).where(criteria);
@@ -262,53 +278,55 @@ public class RatingServiceImpl implements RatingService {
         return eventShortDtos;
     }
 
+    @Override
     public EventFullRatingDto calculateEventRating(Event event) {
-            List<Rating> eventRatings = event.getRatingList();
-            int likesCount = 0;
-            int dislikesCount = 0;
-            float contentSum = 0.0f;
-            float locationSum = 0.0f;
-            float organizationSum = 0.0f;
-            int contentCount = 0;
-            int locationCount = 0;
-            int organizationCount = 0;
-            for (Rating rating : eventRatings) {
-                if (Optional.ofNullable(rating.getContentRate()).isPresent()) {
-                    contentSum += rating.getContentRate();
-                    contentCount++;
-                }
-                if (Optional.ofNullable(rating.getOrganizationRate()).isPresent()) {
-                    organizationSum += rating.getOrganizationRate();
-                    organizationCount++;
-                }
-                if (Optional.ofNullable(rating.getLocationRate()).isPresent()) {
-                    locationSum += rating.getLocationRate();
-                    locationCount++;
-                }
-                if (Optional.ofNullable(rating.getIsLiked()).isPresent()) {
-                    if (rating.getIsLiked().equals(Boolean.TRUE)) {
-                        likesCount++;
-                    } else {
-                        dislikesCount++;
-                    }
+        List<Rating> eventRatings = event.getRatingList();
+        int likesCount = 0;
+        int dislikesCount = 0;
+        float contentSum = 0.0f;
+        float locationSum = 0.0f;
+        float organizationSum = 0.0f;
+        int contentCount = 0;
+        int locationCount = 0;
+        int organizationCount = 0;
+        for (Rating rating : eventRatings) {
+            if (Objects.nonNull(rating.getContentRate())) {
+                contentSum += rating.getContentRate();
+                contentCount++;
+            }
+            if (Objects.nonNull(rating.getOrganizationRate())) {
+                organizationSum += rating.getOrganizationRate();
+                organizationCount++;
+            }
+            if (Objects.nonNull(rating.getLocationRate())) {
+                locationSum += rating.getLocationRate();
+                locationCount++;
+            }
+            if (Objects.nonNull(rating.getIsLiked())) {
+                if (rating.getIsLiked().equals(Boolean.TRUE)) {
+                    likesCount++;
+                } else {
+                    dislikesCount++;
                 }
             }
-            int percentRate = (likesCount == 0 && dislikesCount == 0) ? 0 : (likesCount * 100) / (dislikesCount + likesCount);
-            EventFullRatingDto eventFullRatingDto = EventFullRatingDto.builder()
-                    .contentRate(contentSum / contentCount)
-                    .locationRate(locationSum / locationCount)
-                    .organizationRate(organizationSum / organizationCount)
-                    .percentRating(percentRate)
-                    .build();
+        }
+        int percentRate = (likesCount == 0 && dislikesCount == 0) ? 0 : (likesCount * 100) / (dislikesCount + likesCount);
+        EventFullRatingDto eventFullRatingDto = EventFullRatingDto.builder()
+                .contentRate(contentSum / contentCount)
+                .locationRate(locationSum / locationCount)
+                .organizationRate(organizationSum / organizationCount)
+                .percentRating(percentRate)
+                .build();
         return eventFullRatingDto;
     }
 
+    @Override
     public EventShortRatingDto calculateEventShortRating(Event event) {
         List<Rating> eventRatings = event.getRatingList();
         int likesCount = 0;
         int dislikesCount = 0;
         for (Rating rating : eventRatings) {
-            if (Optional.ofNullable(rating.getIsLiked()).isPresent()) {
+            if (Objects.nonNull(rating.getIsLiked())) {
                 if (rating.getIsLiked().equals(Boolean.TRUE)) {
                     likesCount++;
                 } else {
