@@ -6,7 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.rating.IncRatingDto;
 import ru.practicum.dto.rating.OutRatingDto;
-import ru.practicum.enums.LikeParam;
+import ru.practicum.enums.QueryLikeParam;
 import ru.practicum.service.rating.RatingService;
 
 import java.util.List;
@@ -47,11 +47,11 @@ public class AdminRatingController {
     }
 
     @GetMapping
-    public List<OutRatingDto> getAll(@RequestParam (required = false) LikeParam likeParam,
-                                     @RequestParam (required = false) List<Long> userIds,
-                                     @RequestParam (required = false) List<Long> eventIds,
+    public List<OutRatingDto> getAll(@RequestParam (required = false)QueryLikeParam queryLikeParam,
+                                     @RequestParam(required = false) List<Long> users,
+                                     @RequestParam(required = false) List<Long> events,
                                      @RequestParam(required = false, defaultValue = "0") Integer from,
                                      @RequestParam(required = false, defaultValue = "10") Integer size) {
-        return ratingService.getAll(likeParam, userIds, eventIds, from, size);
+        return ratingService.getAll(queryLikeParam, users, events, from, size);
     }
 }

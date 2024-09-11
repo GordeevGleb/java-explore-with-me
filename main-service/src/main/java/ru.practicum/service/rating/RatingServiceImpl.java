@@ -15,7 +15,7 @@ import ru.practicum.dto.user.UserDto;
 import ru.practicum.entity.Event;
 import ru.practicum.entity.Rating;
 import ru.practicum.entity.User;
-import ru.practicum.enums.LikeParam;
+import ru.practicum.enums.QueryLikeParam;
 import ru.practicum.exception.*;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.mapper.RatingMapper;
@@ -51,14 +51,10 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public OutRatingDto create(Long userId, Long eventId, IncRatingDto incRatingDto) {
         log.info("FEATURE SERVICE LOG: user id " + userId + " rate event id " + eventId);
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("user id " + userId + " not found");
-        }
-        User user = userRepository.findById(userId).get();
-        if (!eventRepository.existsById(eventId)) {
-            throw new NotFoundException("event id " + eventId + " not found");
-        }
-        Event event = eventRepository.findById(eventId).get();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("user id " + userId + " not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("event id " + eventId + " not found"));
         if (user.getId().equals(event.getInitiator().getId())) {
             throw new WrongRequestException("initiator can't rate event");
         }
@@ -78,14 +74,10 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public OutRatingDto update(Long userId, Long ratingId, IncRatingDto incRatingDto) {
         log.info("FEATURE SERVICE LOG: private updating info about rating id " + ratingId);
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("user id " + userId + " not found");
-        }
-        User user = userRepository.findById(userId).get();
-        if (!validateById(ratingId)) {
-            throw new NotFoundException("rating id " + userId + " not found");
-        }
-        Rating actual = ratingRepository.findById(ratingId).get();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User id " + userId + " do not exist"));
+        Rating actual = ratingRepository.findById(ratingId)
+                .orElseThrow(() -> new NotFoundException("Rating id " + ratingId + " do not exist"));
         if (!user.getId().equals(actual.getUser().getId())) {
             throw new IntegrityConflictException("another user can't update rating");
         }
@@ -117,10 +109,8 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public OutRatingDto updateByAdmin(Long ratingId, IncRatingDto incRatingDto) {
         log.info("FEATURE SERVICE LOG: admin updating info about rating id " + ratingId);
-        if (!validateById(ratingId)) {
-            throw new NotFoundException("rating id " + ratingId + " not found");
-        }
-        Rating actual = ratingRepository.findById(ratingId).get();
+        Rating actual = ratingRepository.findById(ratingId)
+                .orElseThrow(() -> new NotFoundException("rating id " + ratingId + " not found"));
         if (Optional.ofNullable(incRatingDto.getIsLiked()).isPresent()) {
             actual.setIsLiked(incRatingDto.getIsLiked());
         }
@@ -146,7 +136,7 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public void delete(Long ratingId) {
         log.info("FEATURE SERVICE LOG: delete rating id " + ratingId);
-        if (validateById(ratingId)) {
+        if (ratingRepository.existsById(ratingId)) {
             ratingRepository.deleteById(ratingId);
         }
         log.info("FEATURE SERVICE LOG: rating removed");
@@ -155,9 +145,8 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public void deleteByUserId(Long userId) {
         log.info("FEATURE SERVICE LOG: removing all user id " + userId + " ratings");
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("user id " + userId + " not found");
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("user id " + userId + " not found"));
         ratingRepository.removeAllByUserId(userId);
         log.info("FEATURE SERVICE LOG: all users rating was removed");
     }
@@ -166,10 +155,8 @@ public class RatingServiceImpl implements RatingService {
     @Transactional(readOnly = true)
     public OutRatingDto getById(Long ratingId) {
         log.info("FEATURE SERVICE LOG: getting rating id {}", ratingId);
-        if (!validateById(ratingId)) {
-            throw new NotFoundException("rating id " + ratingId + " not found");
-        }
-        Rating rating = ratingRepository.findById(ratingId).get();
+        Rating rating = ratingRepository.findById(ratingId)
+                .orElseThrow(() -> new NotFoundException("rating id " + ratingId + " not found"));
         UserDto userDto = userMapper.toUserDto(rating.getUser());
         EventShortDto eventShortDto = eventMapper
                 .toEventShortDto(rating.getEvent(), calculateEventShortRating(rating.getEvent()));
@@ -179,49 +166,41 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OutRatingDto> getAllUsersRatings(Long userId, LikeParam likeParam,
+    public List<OutRatingDto> getAllUsersRatings(Long userId, Boolean likesOrDislikesOnly,
                                                  Integer from, Integer size) {
         log.info("FEATURE SERVICE LOG: get all user");
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("user id " + userId + " not found");
-        }
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Rating> query = builder.createQuery(Rating.class);
 
         Root<Rating> root = query.from(Rating.class);
         Predicate criteria = builder.conjunction();
 
-        if (likeParam != null) {
+        if (likesOrDislikesOnly != null) {
             Predicate isLiked;
-            if (likeParam.equals(LikeParam.LIKES)) {
+            if (likesOrDislikesOnly) {
                 isLiked = builder.isTrue(root.get("isLiked"));
             } else {
                 isLiked = builder.isFalse(root.get("isLiked"));
             }
             criteria = builder.and(criteria, isLiked);
         }
-
-        Predicate actualUser = builder.equal(root.get("user").get("id"), userId);
-        criteria = builder.and(criteria, actualUser);
+        Predicate contatinUser = builder.equal(root.get("user").get("id"), userId);
+        criteria = builder.and(criteria, contatinUser);
 
         query.select(root).where(criteria);
-        try {
-            List<Rating> userRatings = entityManager.createQuery(query)
-                    .setFirstResult(from)
-                    .setMaxResults(size)
-                    .getResultList();
-            log.info("FEATURE SERVICE LOG: user rating list formed; size {}", userRatings.size());
-            return ratingMapper.toOutRatingDtoList(userRatings);
-        } catch (Exception e) {
-            throw new IntegrityConflictException("query exception");
-        }
+        List<Rating> userRatings = entityManager.createQuery(query)
+                .setFirstResult(from)
+                .setMaxResults(size)
+                .getResultList();
+        log.info("FEATURE SERVICE LOG: user rating list formed; size {}", userRatings.size());
+        return ratingMapper.toOutRatingDtoList(userRatings);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<OutRatingDto> getAll(LikeParam likeParam,
-                                     List<Long> userIds,
-                                     List<Long> eventIds,
+    public List<OutRatingDto> getAll(QueryLikeParam queryLikeParam,
+                                     List<Long> users,
+                                     List<Long> events,
                                      Integer from,
                                      Integer size) {
         log.info("FEATURE SERVICE LOG: get all rating list with params");
@@ -231,38 +210,33 @@ public class RatingServiceImpl implements RatingService {
         Root<Rating> root = query.from(Rating.class);
         Predicate criteria = builder.conjunction();
 
-        if (likeParam != null) {
+        if (queryLikeParam != null) {
             Predicate isLiked;
-            if (likeParam.equals(LikeParam.LIKES)) {
-                log.info("like params: " + likeParam);
+            if (queryLikeParam.equals(QueryLikeParam.ONLY_LIKED)) {
                 isLiked = builder.isTrue(root.get("isLiked"));
             } else {
-                log.info("like params: " + likeParam);
                 isLiked = builder.isFalse(root.get("isLiked"));
             }
             criteria = builder.and(criteria, isLiked);
         }
-        if (Optional.ofNullable(userIds).isPresent() && userIds.size() > 0) {
-            Predicate containUsers = root.get("user").get("id").in(userIds);
+
+        if (Optional.ofNullable(users).isPresent() && users.size() > 0) {
+            Predicate containUsers = root.get("user").get("id").in(users);
             criteria = builder.and(criteria, containUsers);
         }
 
-        if (Optional.ofNullable(eventIds).isPresent() && eventIds.size() > 0) {
-            Predicate containEvents = root.get("event").get("id").in(eventIds);
-            criteria = builder.and(criteria, containEvents);
+        if (Optional.ofNullable(events).isPresent() && events.size() > 0) {
+            Predicate contatinEvents = root.get("event").get("id").in(events);
+            criteria = builder.and(criteria, contatinEvents);
         }
 
         query.select(root).where(criteria);
-        try {
-            List<Rating> ratings = entityManager.createQuery(query)
-                    .setFirstResult(from)
-                    .setMaxResults(size)
-                    .getResultList();
-            log.info("FEATURE SERVICE LOG: rating list formed");
-            return ratingMapper.toOutRatingDtoList(ratings);
-        } catch (Exception e) {
-            throw new IntegrityConflictException("query exception");
-        }
+        List<Rating> ratings = entityManager.createQuery(query)
+                .setFirstResult(from)
+                .setMaxResults(size)
+                .getResultList();
+        log.info("FEATURE SERVICE LOG: rating list formed");
+        return ratingMapper.toOutRatingDtoList(ratings);
     }
 
     @Override
@@ -361,9 +335,5 @@ public class RatingServiceImpl implements RatingService {
         }
         int percentRate = (likesCount == 0 && dislikesCount == 0) ? 0 : (likesCount * 100) / (dislikesCount + likesCount);
         return EventShortRatingDto.builder().percentRating(percentRate).build();
-    }
-
-    private Boolean validateById(Long id) {
-        return ratingRepository.existsById(id);
     }
 }
