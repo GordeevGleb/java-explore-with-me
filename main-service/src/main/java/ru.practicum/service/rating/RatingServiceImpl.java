@@ -166,7 +166,7 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OutRatingDto> getAllUsersRatings(Long userId, Boolean likesOrDislikesOnly,
+    public List<OutRatingDto> getAllUsersRatings(Long userId, QueryLikeParam queryLikeParam,
                                                  Integer from, Integer size) {
         log.info("FEATURE SERVICE LOG: get all user");
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -175,9 +175,9 @@ public class RatingServiceImpl implements RatingService {
         Root<Rating> root = query.from(Rating.class);
         Predicate criteria = builder.conjunction();
 
-        if (likesOrDislikesOnly != null) {
+        if (queryLikeParam != null) {
             Predicate isLiked;
-            if (likesOrDislikesOnly) {
+            if (queryLikeParam.equals(QueryLikeParam.ONLY_LIKED)) {
                 isLiked = builder.isTrue(root.get("isLiked"));
             } else {
                 isLiked = builder.isFalse(root.get("isLiked"));
