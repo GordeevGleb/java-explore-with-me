@@ -204,7 +204,7 @@
 					"variable": [
 						{
 							"key": "userId",
-							"value": "5"
+							"value": "13"
 						},
 						{
 							"key": "eventId",
@@ -1009,7 +1009,7 @@
 					"variable": [
 						{
 							"key": "eventId",
-							"value": "5"
+							"value": "2"
 						}
 					]
 				}
@@ -1386,7 +1386,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/ratings/params?locationRate=0&organizationRate=0&contentRate=4.0",
+					"raw": "http://localhost:8080/ratings/params?locationRate=1.0&organizationRate=1.0&contentRate=1.0",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -1399,15 +1399,15 @@
 					"query": [
 						{
 							"key": "locationRate",
-							"value": "0"
+							"value": "1.0"
 						},
 						{
 							"key": "organizationRate",
-							"value": "0"
+							"value": "1.0"
 						},
 						{
 							"key": "contentRate",
-							"value": "4.0"
+							"value": "1.0"
 						}
 					]
 				}
