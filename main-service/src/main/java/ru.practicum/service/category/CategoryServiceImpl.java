@@ -68,7 +68,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void delete(Long id) {
         log.info("MAIN SERVICE LOG: removing category id " + id);
-        if (validateById(id)) {
+        if (!validateById(id)) {
             throw new NotFoundException("Category with id=" + id + " was not found");
         }
         Category actual = categoryRepository.findById(id).get();
@@ -83,7 +83,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryDto update(Long id, NewCategoryDto newCategoryDto) {
         log.info("MAIN SERVICE LOG: updating category id " + id);
-        if (validateById(id)) {
+        if (!validateById(id)) {
             throw new NotFoundException("Category with id=" + id + " was not found");
         }
         Category actual = categoryRepository.findById(id).get();
