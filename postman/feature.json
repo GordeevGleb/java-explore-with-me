@@ -82,11 +82,11 @@
 					"variable": [
 						{
 							"key": "userId",
-							"value": "1"
+							"value": "2"
 						},
 						{
 							"key": "eventId",
-							"value": "2"
+							"value": "1"
 						}
 					]
 				}
@@ -148,11 +148,11 @@
 					"variable": [
 						{
 							"key": "userId",
-							"value": "1"
+							"value": "2"
 						},
 						{
 							"key": "eventId",
-							"value": "2"
+							"value": "1"
 						}
 					]
 				}
@@ -204,11 +204,11 @@
 					"variable": [
 						{
 							"key": "userId",
-							"value": "3"
+							"value": "1"
 						},
 						{
 							"key": "eventId",
-							"value": "2"
+							"value": "1"
 						}
 					]
 				}
@@ -319,7 +319,7 @@
 					"variable": [
 						{
 							"key": "eventId",
-							"value": "2"
+							"value": "1"
 						}
 					]
 				}
@@ -372,11 +372,11 @@
 					"variable": [
 						{
 							"key": "userId",
-							"value": "2"
+							"value": "3"
 						},
 						{
 							"key": "ratingId",
-							"value": "1"
+							"value": "2"
 						}
 					]
 				}
@@ -780,7 +780,7 @@
 					"variable": [
 						{
 							"key": "eventId",
-							"value": "6"
+							"value": "1"
 						}
 					]
 				}
@@ -1072,6 +1072,78 @@
 			"response": []
 		},
 		{
+			"name": "Поиск всех оценок пользователя",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"    pm.response.to.be.withBody;\r",
+							"    pm.response.to.be.json;\r",
+							"});\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/users/:userId/ratings?from=0&size=10",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users",
+						":userId",
+						"ratings"
+					],
+					"query": [
+						{
+							"key": "likeParam",
+							"value": "DISLIKES",
+							"disabled": true
+						},
+						{
+							"key": "from",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "10"
+						}
+					],
+					"variable": [
+						{
+							"key": "userId",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Удаление всех оценок пользователя",
 			"event": [
 				{
@@ -1179,65 +1251,7 @@
 			"response": []
 		},
 		{
-			"name": "Поиск всех оценок пользователя",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"    pm.response.to.be.withBody;\r",
-							"    pm.response.to.be.json;\r",
-							"});\r",
-							"\r",
-							""
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/admin/ratings/user/:userId",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"admin",
-						"ratings",
-						"user",
-						":userId"
-					],
-					"variable": [
-						{
-							"key": "userId",
-							"value": "1"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Поиск всех оценок (можно выбрать только хорошие/плохие оценки)",
+			"name": "Поиск всех оценок(можно сделать выборку по id пользователя, id события,  только лайкам/дизлайкам)",
 			"event": [
 				{
 					"listen": "test",
@@ -1281,8 +1295,18 @@
 					],
 					"query": [
 						{
-							"key": "likesOrDislikesOnly",
-							"value": "true",
+							"key": "queryLikeParam",
+							"value": "ONLY_LIKED",
+							"disabled": true
+						},
+						{
+							"key": "users",
+							"value": "2",
+							"disabled": true
+						},
+						{
+							"key": "events",
+							"value": "1",
 							"disabled": true
 						},
 						{
