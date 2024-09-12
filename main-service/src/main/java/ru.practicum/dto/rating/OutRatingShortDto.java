@@ -27,5 +27,4 @@ public class OutRatingShortDto {
     private Float organizationRate;
 
     private Float contentRate;
-
 }

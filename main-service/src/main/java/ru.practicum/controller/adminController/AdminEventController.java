@@ -23,7 +23,7 @@ public class AdminEventController {
 
     @PatchMapping("/{eventId}")
     public EventFullDto update(@PathVariable Long eventId,
-                                    @Valid @RequestBody UpdateEventAdminRequest updateEventAdminRequest) {
+                               @Valid @RequestBody UpdateEventAdminRequest updateEventAdminRequest) {
         return eventService.updateByAdmin(eventId, updateEventAdminRequest);
 
     }
@@ -31,12 +31,12 @@ public class AdminEventController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<EventFullDto> get(@RequestParam(required = false) List<Long> users,
-                                        @RequestParam(required = false) List<EventState> states,
-                                        @RequestParam(required = false) List<Long> categories,
-                                        @RequestParam(required = false) LocalDateTime rangeStart,
-                                        @RequestParam(required = false) LocalDateTime rangeEnd,
-                                        @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
-                                        @RequestParam(required = false, defaultValue = "10") @Positive Integer size) {
+                                  @RequestParam(required = false) List<EventState> states,
+                                  @RequestParam(required = false) List<Long> categories,
+                                  @RequestParam(required = false) LocalDateTime rangeStart,
+                                  @RequestParam(required = false) LocalDateTime rangeEnd,
+                                  @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
+                                  @RequestParam(required = false, defaultValue = "10") @Positive Integer size) {
         return eventService.getWithParamsAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 }

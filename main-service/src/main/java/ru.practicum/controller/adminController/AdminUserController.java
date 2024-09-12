@@ -26,8 +26,8 @@ public class AdminUserController {
 
     @GetMapping
     public List<UserDto> get(@RequestParam(required = false, name = "ids") List<Long> ids,
-                                  @RequestParam(name = "from", defaultValue = "0") Integer from,
-                                  @RequestParam(name = "size", defaultValue = "10") Integer size) {
+                             @RequestParam(name = "from", defaultValue = "0") Integer from,
+                             @RequestParam(name = "size", defaultValue = "10") Integer size) {
         return userService.get(ids, from, size);
 
     }
@@ -37,5 +37,4 @@ public class AdminUserController {
     public void delete(@PathVariable Long id) {
         userService.delete(id);
     }
-
 }

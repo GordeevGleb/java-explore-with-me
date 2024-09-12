@@ -31,5 +31,4 @@ public class OutRatingDto {
     private Float organizationRate;
 
     private Float contentRate;
-
 }

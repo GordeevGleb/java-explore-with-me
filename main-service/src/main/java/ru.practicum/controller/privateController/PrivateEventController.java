@@ -33,8 +33,8 @@ public class PrivateEventController {
 
     @GetMapping
     public List<EventShortDto> getUserEvents(@PathVariable Long userId,
-                                   @RequestParam(name = "from", defaultValue = "0", required = false) Integer from,
-                                   @RequestParam(name = "size", defaultValue = "10", required = false) Integer size) {
+                                             @RequestParam(name = "from", defaultValue = "0", required = false) Integer from,
+                                             @RequestParam(name = "size", defaultValue = "10", required = false) Integer size) {
         return eventService.getUserEvents(userId, from, size);
     }
 
@@ -53,8 +53,8 @@ public class PrivateEventController {
 
     @PatchMapping("/{eventId}")
     public EventFullDto updateByUser(@PathVariable Long userId,
-                                          @PathVariable Long eventId,
-                                          @Valid @RequestBody UpdateEventUserRequest updateEventUserRequest) {
+                                     @PathVariable Long eventId,
+                                     @Valid @RequestBody UpdateEventUserRequest updateEventUserRequest) {
         return eventService.updateByUser(userId, eventId, updateEventUserRequest);
     }
 
