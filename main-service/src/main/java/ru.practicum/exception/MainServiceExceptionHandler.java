@@ -172,4 +172,28 @@ public class MainServiceExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseBody
+    public ApiError handleRatingDateTimeUpdateException(final RatingDateTimeUpdateException e) {
+        return ApiError.builder()
+                .status(ApiErrorStatus.CONFLICT)
+                .reason("Rating Date time conflict exception")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseBody
+    public ApiError handleRatingPrivateUpdateCountException(final RatingPrivateUpdateCountException e) {
+        return ApiError.builder()
+                .status(ApiErrorStatus.CONFLICT)
+                .reason("Rating update count exception")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }

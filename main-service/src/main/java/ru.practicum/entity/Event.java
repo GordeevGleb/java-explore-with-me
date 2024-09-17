@@ -8,6 +8,8 @@ import lombok.*;
 import ru.practicum.enums.EventState;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 
 @Getter
 @Setter
@@ -73,4 +75,7 @@ public class Event {
 
     @Column(name = "views")
     private Long viewCount;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
+    private List<Rating> ratingList;
 }

@@ -31,7 +31,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryDto create(NewCategoryDto newCategoryDto) {
         log.info("MAIN SERVICE LOG: creating category " + newCategoryDto.getName());
-        if (categoryRepository.existsByName(newCategoryDto.getName())) {
+        if (validateByName(newCategoryDto.getName())) {
             throw new ConcurrentNameException("could not execute statement; SQL [n/a];" +
                     " constraint [uq_category_name];" +
                     " nested exception is org.hibernate.exception.ConstraintViolationException:" +
@@ -56,8 +56,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public CategoryDto getById(Long id) {
         log.info("MAIN SERVICE LOG: get category by id " + id);
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Category with id=" + id + " was not found"));
+        if (!validateById(id)) {
+            throw new NotFoundException("Category with id=" + id + " was not found");
+        }
+        Category category = categoryRepository.findById(id).get();
         log.info("MAIN SERVICE LOG: category id " + id + " found");
         return categoryMapper.toCategoryDto(category);
     }
@@ -66,8 +68,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void delete(Long id) {
         log.info("MAIN SERVICE LOG: removing category id " + id);
-        Category actual = categoryRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Category with id=" + id + " was not found"));
+        if (!validateById(id)) {
+            throw new NotFoundException("Category with id=" + id + " was not found");
+        }
+        Category actual = categoryRepository.findById(id).get();
         if (eventRepository.existsByCategoryId(id)) {
             throw new CategoryNotEmptyException("The category is not empty");
         }
@@ -79,10 +83,12 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryDto update(Long id, NewCategoryDto newCategoryDto) {
         log.info("MAIN SERVICE LOG: updating category id " + id);
-        Category actual = categoryRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Category with id=" + id + " was not found"));
+        if (!validateById(id)) {
+            throw new NotFoundException("Category with id=" + id + " was not found");
+        }
+        Category actual = categoryRepository.findById(id).get();
         if (categoryRepository.existsByName(newCategoryDto.getName()) &&
-         !actual.getName().equals(newCategoryDto.getName())) {
+                !actual.getName().equals(newCategoryDto.getName())) {
             throw new ConcurrentNameException("could not execute statement; SQL [n/a];" +
                     " constraint [uq_category_name];" +
                     " nested exception is org.hibernate.exception.ConstraintViolationException:" +
@@ -92,5 +98,13 @@ public class CategoryServiceImpl implements CategoryService {
         Category updatedCategory = categoryRepository.save(actual);
         log.info("MAIN SERVICE LOG: category id " + id + " updated");
         return categoryMapper.toCategoryDto(updatedCategory);
+    }
+
+    private Boolean validateById(Long id) {
+        return categoryRepository.existsById(id);
+    }
+
+    private Boolean validateByName(String name) {
+        return categoryRepository.existsByName(name);
     }
 }

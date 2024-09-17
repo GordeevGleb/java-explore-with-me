@@ -20,6 +20,8 @@ import ru.practicum.mapper.EventMapper;
 import ru.practicum.repository.CompilationRepository;
 import ru.practicum.repository.EventRepository;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.service.rating.RatingService;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,8 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final CompilationMapper compilationMapper;
     private final EventMapper eventMapper;
+
+    private final RatingService ratingService;
 
     private final EntityManager entityManager;
 
@@ -54,7 +58,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<EventShortDto> compilationEvents = actual
                 .getEvents()
                 .stream()
-                .map(eventMapper::toEventShortDto)
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
                 .collect(Collectors.toList());
         CompilationDto savedCompilation = compilationMapper.toCompilationDto(actual, compilationEvents);
         log.info("MAIN SERVICE LOG: compilation created");
@@ -65,12 +69,14 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional(readOnly = true)
     public CompilationDto getById(Long id) {
         log.info("MAIN SERVICE LOG: get compilation id " + id);
-        Compilation compilation = compilationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
+        if (!validateById(id)) {
+            throw new NotFoundException("Compilation with id=" + id + " was not found");
+        }
+        Compilation compilation = compilationRepository.findById(id).get();
         List<EventShortDto> compilationEvents = compilation
                 .getEvents()
                 .stream()
-                .map(eventMapper::toEventShortDto)
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
                 .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: compilation id " + id + " found");
         return compilationMapper.toCompilationDto(compilation, compilationEvents);
@@ -112,8 +118,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public void delete(Long id) {
         log.info("MAIN SERVICE LOG: removing compilation id" + id);
-        Compilation actual = compilationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
+        if (!validateById(id)) {
+            throw new NotFoundException("Compilation with id=" + id + " was not found");
+        }
+        Compilation actual = compilationRepository.findById(id).get();
         compilationRepository.delete(actual);
         log.info("MAIN SERVICE LOG: compilation removed");
     }
@@ -122,8 +130,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public CompilationDto update(Long id, UpdateCompilationRequest updateCompilationRequest) {
         log.info("MAIN SERVICE LOG: updating compilation id " + id);
-        Compilation actual = compilationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Compilation with id=" + id + " was not found"));
+        if (!validateById(id)) {
+            throw new NotFoundException("Compilation with id=" + id + " was not found");
+        }
+        Compilation actual = compilationRepository.findById(id).get();
         if (updateCompilationRequest.getEvents() != null) {
             List<Event> events = eventRepository.findAllByIdIn(updateCompilationRequest.getEvents());
             actual.setEvents(new HashSet<>(events));
@@ -138,9 +148,13 @@ public class CompilationServiceImpl implements CompilationService {
         List<EventShortDto> eventShortDtos = actual
                 .getEvents()
                 .stream()
-                .map(eventMapper::toEventShortDto)
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
                 .collect(Collectors.toList());
         log.info("MAIN SERVICE LOG: compilation id " + id + " updated");
         return compilationMapper.toCompilationDto(actual, eventShortDtos);
+    }
+
+    private Boolean validateById(Long id) {
+        return compilationRepository.existsById(id);
     }
 }

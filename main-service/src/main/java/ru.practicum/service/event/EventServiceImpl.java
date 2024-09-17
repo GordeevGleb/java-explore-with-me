@@ -14,6 +14,7 @@ import ru.practicum.EndpointHitDto;
 import ru.practicum.StatsClient;
 import ru.practicum.ViewStatsResponseDto;
 import ru.practicum.dto.event.*;
+import ru.practicum.dto.rating.EventFullRatingDto;
 import ru.practicum.entity.Category;
 import ru.practicum.entity.Event;
 import ru.practicum.entity.Request;
@@ -26,6 +27,8 @@ import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.RequestRepository;
 import ru.practicum.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.service.rating.RatingService;
+
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,6 +50,8 @@ public class EventServiceImpl implements EventService {
 
     private final StatsClient statsClient;
 
+    private final RatingService ratingService;
+
     private final EntityManager entityManager;
 
 
@@ -54,8 +59,10 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto create(Long userId, NewEventDto newEventDto) {
         log.info("MAIN SERVICE LOG: user id " + userId + " creating event");
-        Category category = categoryRepository.findById(newEventDto.getCategory())
-                .orElseThrow(() -> new NotFoundException("Category was not found"));
+        if (!categoryRepository.existsById(newEventDto.getCategory())) {
+            throw new NotFoundException("Category was not found");
+        }
+        Category category = categoryRepository.findById(newEventDto.getCategory()).get();
         LocalDateTime eventDate = newEventDto.getEventDate();
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
             throw new DateTimeException("Field: eventDate. Error: должно содержать дату, которая еще не наступила." +
@@ -63,7 +70,8 @@ public class EventServiceImpl implements EventService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
-        Event event = eventMapper.toEvent(newEventDto, category, EventState.PENDING, user, LocalDateTime.now());
+        Event event = eventMapper.toEvent(newEventDto, category, EventState.PENDING, user,
+                LocalDateTime.now(), new HashSet<>());
         if (Optional.ofNullable(event.getPaid()).isEmpty()) {
             event.setPaid(Boolean.FALSE);
         }
@@ -71,26 +79,34 @@ public class EventServiceImpl implements EventService {
             event.setParticipantLimit(0L);
         }
         log.info("MAIN SERVICE LOG: event created");
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        return eventMapper.toEventFullDto(eventRepository.save(event), new EventFullRatingDto());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> getUserEvents(Long userId, Integer from, Integer size) {
         log.info("MAIN SERVICE LOG: get user's events");
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("user id " + userId + " not found");
+        }
         PageRequest pageRequest = PageRequest.of(from / size, size);
         List<Event> actual = eventRepository.findAllByInitiatorId(userId, pageRequest).toList();
         log.info("MAIN SERVICE LOG: user id " + userId + " event list formed");
-        return eventMapper.toEventShortDtoList(actual);
+        List<EventShortDto> resultList = actual.stream()
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
+                .collect(Collectors.toList());
+        return resultList;
     }
 
     @Override
     @Transactional
     public EventFullDto updateByAdmin(Long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (!validateById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
+        Event event = eventRepository.findById(eventId).get();
         if (Optional.ofNullable(updateEventAdminRequest).isEmpty()) {
-            return eventMapper.toEventFullDto(event);
+            return eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event));
         }
         if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
             throw new EventDateTimeException("Cannot publish the event because of date time restriction");
@@ -159,17 +175,19 @@ public class EventServiceImpl implements EventService {
             event.setEventDate(updateEventAdminRequest.getEventDate());
         }
 
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        return eventMapper.toEventFullDto(eventRepository.save(event), ratingService.calculateEventRating(event));
     }
 
     @Override
     @Transactional
     public EventFullDto updateByUser(Long userId, Long eventId, UpdateEventUserRequest updateEventUserRequest) {
         log.info("MAIN SERICE LOG: user id " + userId + " updating event id " + eventId);
-        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (!validateByIdAndInitiatorId(eventId, userId)) {
+            throw new NotFoundException("Event with id=" + eventId + " and initiator id " + userId + " was not found");
+        }
+        Event event = eventRepository.findByIdAndInitiatorId(eventId, userId).get();
         if (Optional.ofNullable(updateEventUserRequest).isEmpty()) {
-            return eventMapper.toEventFullDto(event);
+            return eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event));
         }
         if (event.getState().equals(EventState.PUBLISHED)) {
             throw new EventStatusException("Only pending or canceled events can be changed");
@@ -215,17 +233,19 @@ public class EventServiceImpl implements EventService {
             }
         }
         log.info("MAIN SERVICE LOG: event updated by user");
-        return eventMapper.toEventFullDto(eventRepository.save(event));
+        return eventMapper.toEventFullDto(eventRepository.save(event), ratingService.calculateEventRating(event));
     }
 
     @Override
     @Transactional(readOnly = true)
     public EventFullDto getByIdUser(Long userId, Long eventId) {
         log.info("MAIN SERVICE LOG: getting event id " + eventId + " by user id " + userId);
-        Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        if (!validateByIdAndInitiatorId(eventId, userId)) {
+            throw new NotFoundException("Event with id=" + eventId + " and initiator id " + userId + " was not found");
+        }
+        Event actual = eventRepository.findByIdAndInitiatorId(eventId, userId).get();
         log.info("MAIN SERVICE LOG: event found");
-        return eventMapper.toEventFullDto(actual);
+        return eventMapper.toEventFullDto(actual, ratingService.calculateEventRating(actual));
     }
 
     @Override
@@ -283,7 +303,10 @@ public class EventServiceImpl implements EventService {
                 .peek(event -> event.setConfirmedRequestCount(requests.getOrDefault(event.getId(), 0L)))
                 .peek(event -> event.setViewCount(views.getOrDefault(event.getId(), 0L)))
                 .collect(Collectors.toList());
-        return eventMapper.toEventFullDtoList(events);
+        List<EventFullDto> resultList = events.stream()
+                .map(event -> eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event)))
+                .collect(Collectors.toList());
+        return resultList;
     }
 
     @Override
@@ -291,7 +314,7 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getWithParams(String text, List<Long> categoriesIds, Boolean paid, LocalDateTime rangeStart,
                                              LocalDateTime rangeEnd, Boolean onlyAvailable, SortFormat sort,
                                              Integer from, Integer size, HttpServletRequest request) {
-log.info("MAIN SERVICE LOG: getting events with params public");
+        log.info("MAIN SERVICE LOG: getting events with params public");
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> query = builder.createQuery(Event.class);
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
@@ -339,7 +362,6 @@ log.info("MAIN SERVICE LOG: getting events with params public");
             Predicate lessTime = builder.lessThanOrEqualTo(root.get("eventDate").as(LocalDateTime.class), rangeEnd);
             criteria = builder.and(criteria, lessTime);
         }
-        log.info("MAIN SERVICE LOG: criteria:", criteria.getExpressions());
 
         query.select(root).where(criteria).orderBy(builder.asc(root.get("eventDate")));
         List<Event> events = entityManager.createQuery(query)
@@ -371,7 +393,10 @@ log.info("MAIN SERVICE LOG: getting events with params public");
 
         Map<Long, Long> requests = getConfirmedRequests(events);
 
-        List<EventShortDto> result = eventMapper.toEventShortDtoList(events);
+        List<EventShortDto> result = events.stream()
+                .map(event -> eventMapper.toEventShortDto(event, ratingService.calculateEventShortRating(event)))
+                .collect(Collectors.toList());
+
         result = result.stream()
                 .peek(event -> event.setViews(views.getOrDefault(event.getId(), 0L)))
                 .peek(event -> event.setConfirmedRequests(requests.getOrDefault(event.getId(), 0L)))
@@ -382,8 +407,10 @@ log.info("MAIN SERVICE LOG: getting events with params public");
     @Override
     @Transactional(readOnly = true)
     public EventFullDto getByIdPublic(Long id, HttpServletRequest request) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format("Event with id=%d was not found", id)));
+        if (!validateById(id)) {
+            throw new NotFoundException(String.format("Event with id=%d was not found", id));
+        }
+        Event event = eventRepository.findById(id).get();
         if (event.getState() != EventState.PUBLISHED) {
             throw new NotFoundException(String.format("Event with id=%d was not found", id));
         }
@@ -392,7 +419,7 @@ log.info("MAIN SERVICE LOG: getting events with params public");
 
         Map<Long, Long> requests = getConfirmedRequests(List.of(event));
 
-        EventFullDto result = eventMapper.toEventFullDto(event);
+        EventFullDto result = eventMapper.toEventFullDto(event, ratingService.calculateEventRating(event));
         result.setConfirmedRequests(requests.getOrDefault(event.getId(), 0L));
         result.setViews(views.getOrDefault(event.getId(), 0L));
 
@@ -447,5 +474,13 @@ log.info("MAIN SERVICE LOG: getting events with params public");
                 .ip(request.getRemoteAddr())
                 .timestamp(LocalDateTime.now())
                 .build());
+    }
+
+    private Boolean validateById(Long id) {
+        return eventRepository.existsById(id);
+    }
+
+    private Boolean validateByIdAndInitiatorId(Long eventId, Long userId) {
+        return eventRepository.existsByIdAndInitiatorId(eventId, userId);
     }
 }

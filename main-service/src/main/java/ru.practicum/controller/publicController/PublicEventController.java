@@ -18,15 +18,15 @@ public class PublicEventController {
 
     @GetMapping
     public List<EventShortDto> getWithParams(@RequestParam(name = "text", required = false) String text,
-                                   @RequestParam(name = "categories", required = false) List<Long> categories,
-                                   @RequestParam(name = "paid", required = false) Boolean paid,
-                                   @RequestParam(name = "rangeStart", required = false) LocalDateTime rangeStart,
-                                   @RequestParam(name = "rangeEnd", required = false) LocalDateTime rangeEnd,
-                                   @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
-                                   @RequestParam(name = "sort", required = false) SortFormat sortFormat,
-                                   @RequestParam(name = "from", required = false, defaultValue = "0") Integer from,
-                                   @RequestParam(name = "size", required = false, defaultValue = "10") Integer size,
-                                   HttpServletRequest request) {
+                                             @RequestParam(name = "categories", required = false) List<Long> categories,
+                                             @RequestParam(name = "paid", required = false) Boolean paid,
+                                             @RequestParam(name = "rangeStart", required = false) LocalDateTime rangeStart,
+                                             @RequestParam(name = "rangeEnd", required = false) LocalDateTime rangeEnd,
+                                             @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
+                                             @RequestParam(name = "sort", required = false) SortFormat sortFormat,
+                                             @RequestParam(name = "from", required = false, defaultValue = "0") Integer from,
+                                             @RequestParam(name = "size", required = false, defaultValue = "10") Integer size,
+                                             HttpServletRequest request) {
         return eventService.getWithParams(text, categories, paid, rangeStart, rangeEnd,
                 onlyAvailable, sortFormat, from, size, request);
     }
